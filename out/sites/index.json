@@ -167,7 +167,7 @@
    "max_dark_h": 359.0,
    "far_side": false,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {
@@ -184,7 +184,7 @@
    "max_dark_h": 362.0,
    "far_side": true,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {
@@ -201,7 +201,7 @@
    "max_dark_h": 361.0,
    "far_side": false,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {
@@ -218,7 +218,7 @@
    "max_dark_h": 356.0,
    "far_side": false,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {
@@ -235,7 +235,7 @@
    "max_dark_h": 361.0,
    "far_side": false,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {
@@ -252,7 +252,7 @@
    "max_dark_h": 376.0,
    "far_side": false,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {
@@ -269,7 +269,7 @@
    "max_dark_h": 358.0,
    "far_side": false,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {
@@ -286,7 +286,7 @@
    "max_dark_h": 371.0,
    "far_side": false,
    "earth_blocked_by_terrain": false,
-   "has_mission": false,
+   "has_mission": true,
    "has_uncertainty": false
   },
   {

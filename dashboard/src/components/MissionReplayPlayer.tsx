@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { angDiff, decodeBody, discFrac, horizonAt, inIntervals, intervals, wrap360 } from "../lib/astro";
 import type { Ev, Iv } from "../lib/astro";
 import { DAY, HOUR, compass, fmtAz, fmtDate, fmtDateTime, fmtDeg, fmtDur, fmtKm, fmtSpan, fmtTime, parseUtc } from "../lib/format";
+import { missionKind } from "../lib/types";
 import type { MissionReplay, Site, SiteEvent } from "../lib/types";
 import { useWidth } from "./Panorama";
 import { Stars, SunDisc } from "./SpaceArt";
@@ -28,6 +29,8 @@ export interface Replay {
   open: Iv[];
   yMin: number;
   yMax: number;
+  /** highest the Sun's centre gets inside the scrub range, degrees: the top of the full-sky view */
+  elMax: number;
   start: number;
 }
 
@@ -61,9 +64,11 @@ export function buildReplay(site: Site, r: MissionReplay): Replay | null {
   let hmin = 0;
   let hmax = 0;
   let elMin = 0;
+  let elMax = 0;
   const i0 = Math.max(0, Math.floor((a - t0) / step));
   const i1 = Math.min(n - 1, Math.ceil((b - t0) / step));
   for (let i = i0; i <= i1; i++) {
+    elMax = Math.max(elMax, body.el[i]);
     if (body.el[i] > 6) continue;
     elMin = Math.min(elMin, body.el[i]);
     for (let d = -12; d <= 12; d += 2) {
@@ -77,8 +82,9 @@ export function buildReplay(site: Site, r: MissionReplay): Replay | null {
 
   // open on the approach to the first moment the story turns: sunset (either kind) or the reported end
   const keys = [tSet, oSet, end].filter((x): x is number => x != null && x > a && x <= b);
-  const start = Math.max(a, Math.min(...(keys.length ? keys : [b])) - 14 * HOUR);
-  return { hor, t0, step, n, az: body.az, el: body.el, r: body.r, a, b, landed, end, tSet, oSet, setEv, evs, lit, open, yMin, yMax, start };
+  // (an unscored daylight visit has no such turn: it opens at the landing)
+  const start = missionKind(r) === "scored" ? Math.max(a, Math.min(...(keys.length ? keys : [b])) - 14 * HOUR) : a;
+  return { hor, t0, step, n, az: body.az, el: body.el, r: body.r, a, b, landed, end, tSet, oSet, setEv, evs, lit, open, yMin, yMax, elMax, start };
 }
 
 export function sunAt(R: Replay, t: number): { az: number; el: number } {
@@ -110,6 +116,9 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
   const [t, setT] = useState(() => R?.start ?? 0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
+  const kind = r ? missionKind(r) : "scored";
+  // the daylight visits had the Sun 5 to 50 degrees up, far above the close-up: they open on the whole sky
+  const [full, setFull] = useState(kind !== "scored");
   const tRef = useRef(t);
   tRef.current = t;
   const dragging = useRef(false);
@@ -117,7 +126,8 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
   useEffect(() => {
     if (R) setT(R.start);
     setPlaying(false);
-  }, [R]);
+    setFull(kind !== "scored");
+  }, [R, kind]);
 
   useEffect(() => {
     if (!playing || !R) return;
@@ -161,7 +171,7 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
   // the refined event list decides lit / dark; the 30-min track gives the size of the visible part
   if (litIv && frac <= 0) frac = 0.01;
   if (!litIv && frac > 0) frac = 0;
-  const alive = t < R.end;
+  const alive = kind === "operating" || t < R.end;
   const nextLit = !litIv ? R.lit.find((iv) => iv[0] > t) ?? null : null;
   const nextOpen = !openIv ? R.open.find((iv) => iv[0] > t) ?? null : null;
   let darkBy: SiteEvent | null = null;
@@ -191,13 +201,15 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
   const B = 24;
   const PW = W - L - Rm;
   const PH = H - T - B;
-  const ypx = PH / (R.yMax - R.yMin);
+  const yMin = full ? Math.min(R.yMin, -4) : R.yMin;
+  const yMax = full ? Math.min(90, Math.max(20, Math.ceil((R.elMax + 4) / 10) * 10)) : R.yMax;
+  const ypx = PH / (yMax - yMin);
   const STRETCH = 2.5;
-  const span = Math.min(60, Math.max(14, PW / (ypx / STRETCH)));
+  const span = full ? Math.min(180, Math.max(60, PW / ypx)) : Math.min(60, Math.max(14, PW / (ypx / STRETCH)));
   const xpx = PW / span;
   const centre = sun.az;
   const X = (az: number) => L + (angDiff(az, centre) + span / 2) * xpx;
-  const Y = (el: number) => T + (R.yMax - el) * ypx;
+  const Y = (el: number) => T + (yMax - el) * ypx;
   const inView = (az: number) => Math.abs(angDiff(az, centre)) <= span / 2 + 1;
 
   let terr = "";
@@ -222,15 +234,15 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
     }
   }
 
-  const yStep = R.yMax - R.yMin <= 7 ? 1 : 2;
+  const yStep = yMax - yMin <= 7 ? 1 : yMax - yMin <= 16 ? 2 : yMax - yMin <= 40 ? 5 : 10;
   const yTicks: number[] = [];
-  for (let v = Math.ceil(R.yMin / yStep) * yStep; v <= R.yMax; v += yStep) yTicks.push(v);
-  const azStep = [2, 5, 10, 15].find((s) => s * xpx >= 56) ?? 15;
+  for (let v = Math.ceil(yMin / yStep) * yStep; v <= yMax; v += yStep) yTicks.push(v);
+  const azStep = [2, 5, 10, 15, 30, 45].find((s) => s * xpx >= 56) ?? 45;
   const azTicks: number[] = [];
   for (let k = Math.ceil((centre - span / 2) / azStep); k * azStep <= centre + span / 2; k++) azTicks.push(k * azStep);
 
-  const rp = Math.max(5, R.r * ypx);
-  const off = sun.el - R.r > R.yMax;
+  const rp = Math.max(full ? 7 : 5, R.r * ypx);
+  const off = sun.el - R.r > yMax;
   const sx = X(sun.az);
   const sy = Y(sun.el);
   const clip = `rp-clip-${site.id}`;
@@ -276,10 +288,22 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
     { label: "Landing", t: R.a, cls: "mk-land" },
     ...(R.tSet != null && R.tSet >= R.a && R.tSet <= R.b ? [{ label: "Terrain sunset", t: R.tSet, cls: "mk-sunset" }] : []),
     ...(R.oSet != null && R.oSet >= R.a && R.oSet <= R.b ? [{ label: "Flat-horizon sunset", t: R.oSet, cls: "mk-open" }] : []),
-    { label: "Reported end", t: R.end, cls: "mk-end" },
+    // Chang'e-3 has no end: end_utc only closes the replayed first day and night
+    ...(kind === "operating" ? [] : [{ label: kind === "visit" ? "Lift-off" : "Reported end", t: R.end, cls: kind === "visit" ? "mk-land" : "mk-end" }]),
   ].sort((p, q) => p.t - q.t);
 
-  const desc = `Replay at ${fmtDateTime(t)}: ${terrText}. Flat horizon: ${openText}. Lander ${alive ? "operating" : "past its reported end"}.`;
+  const craft =
+    kind === "visit"
+      ? { label: "Visit (public record)", main: alive ? "On the surface" : "Lifted off", sub: alive ? `lift-off in ${fmtDur(R.end - t)}` : `${fmtDur(t - R.end)} after lift-off`, said: alive ? "Craft on the surface" : "After lift-off" }
+      : kind === "operating"
+        ? { label: "Lander (public record)", main: "Operating", sub: "no end of mission on record", said: "Lander operating" }
+        : {
+            label: "Lander (public record)",
+            main: alive ? "Operating" : "Mission ended",
+            sub: alive ? `reported end in ${fmtDur(R.end - t)}` : `${fmtDur(t - R.end)} after the reported end`,
+            said: `Lander ${alive ? "operating" : "past its reported end"}`,
+          };
+  const desc = `Replay at ${fmtDateTime(t)}: ${terrText}. Flat horizon: ${openText}. ${craft.said}.`;
 
   return (
     <div className="replay">
@@ -293,6 +317,14 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
               {s.label}
             </button>
           ))}
+        </div>
+        <div className="seg" role="group" aria-label="How much sky to show">
+          <button aria-pressed={!full} onClick={() => setFull(false)} title="The few degrees above the horizon, where sunrise and sunset happen">
+            Close-up
+          </button>
+          <button aria-pressed={full} onClick={() => setFull(true)} title="From the horizon up to the Sun's highest point in this replay">
+            Full sky
+          </button>
         </div>
         <span className="replay-clock" aria-hidden>
           {fmtDate(t)} <b>{fmtTime(t)}</b> UTC
@@ -410,7 +442,7 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
             <rect x={SX(R.landed)} y={18} width={Math.max(2, SX(R.end) - SX(R.landed))} height={34} className="stay-box" />
             {R.tSet != null && R.tSet <= R.b && <line x1={SX(R.tSet)} x2={SX(R.tSet)} y1={17} y2={35} className="mk mk-sunset" />}
             {R.oSet != null && R.oSet <= R.b && <line x1={SX(R.oSet)} x2={SX(R.oSet)} y1={17} y2={51} className="mk mk-open" />}
-            <line x1={SX(R.end)} x2={SX(R.end)} y1={16} y2={54} className="mk mk-end" />
+            {kind !== "operating" && <line x1={SX(R.end)} x2={SX(R.end)} y1={16} y2={54} className={kind === "visit" ? "mk mk-land" : "mk mk-end"} />}
             {dayTicks.map((d) => (
               <g key={d}>
                 <line x1={SX(d)} x2={SX(d)} y1={52} y2={57} className="tl-grid major" />
@@ -461,19 +493,20 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
           <div className="rs-sub">{openSub || " "}</div>
         </div>
         <div className="rs">
-          <div className="tile-label">Lander (public record)</div>
+          <div className="tile-label">{craft.label}</div>
           <div className="rs-main">
-            <span className={`dot ${alive ? "dot-both" : "dot-ended"}`} aria-hidden />
-            {alive ? "Operating" : "Mission ended"}
+            <span className={`dot ${alive ? "dot-both" : kind === "visit" ? "dot-dark" : "dot-ended"}`} aria-hidden />
+            {craft.main}
           </div>
-          <div className="rs-sub">{alive ? `reported end in ${fmtDur(R.end - t)}` : `${fmtDur(t - R.end)} after the reported end`}</div>
+          <div className="rs-sub">{craft.sub}</div>
         </div>
       </div>
       <p className={`replay-clash ${clash ? "on" : ""}`} role="status" aria-live="off">
         {clash ?? (litIv && openIv ? "Both agree right now: the Sun is up." : "Both agree right now: the Sun is down.")}
       </p>
       <p className="note">
-        The view follows the Sun along the horizon measured from LOLA terrain at this site. Vertical scale stretched ×{STRETCH}; the disc is to scale on the elevation axis. Positions come from the engine's {Math.round(R.step / 60000)}-minute replay
+        The view follows the Sun along the horizon measured from LOLA terrain at this site.{" "}
+        {full ? "Full sky: from the horizon up to the Sun's highest point in this replay; the Sun's disc is drawn larger than its true size so it stays visible." : `Vertical scale stretched ×${STRETCH}; the disc is to scale on the elevation axis.`} Positions come from the engine's {Math.round(R.step / 60000)}-minute replay
         track; the lit and dark bands use its event times, refined to about a second.
         {R.setEv ? ` Last light at ${fmtAz(R.setEv.az_deg)}: Sun centre ${fmtDeg(R.setEv.el_deg)}, terrain ${fmtDeg(R.setEv.horizon_el_deg)}.` : ""}
       </p>

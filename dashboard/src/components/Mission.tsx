@@ -1,14 +1,35 @@
 import { horizonAt } from "../lib/astro";
 import SourceLink from "./SourceLink";
-import { DAY, fmtAz, fmtDate, fmtDateTime, fmtDeg, fmtKm, fmtSpan, fmtTime, parseUtc } from "../lib/format";
+import { DAY, fmtAz, fmtDate, fmtDateTime, fmtDeg, fmtDur, fmtKm, fmtSpan, fmtTime, parseUtc } from "../lib/format";
+import { missionKind } from "../lib/types";
 import type { MissionReplay, Site } from "../lib/types";
 import MissionReplayPlayer, { hasReplayTrack } from "./MissionReplayPlayer";
 import { useWidth } from "./Panorama";
 
 export interface Verdict {
   tag: string;
-  tone: "match" | "honest" | "info";
+  /** "visit" = replayed but not scored (Apollo, Chang'e-3, Chang'e-6) */
+  tone: "match" | "honest" | "info" | "visit";
   text: string;
+}
+
+/** The marker in front of a verdict tag. Unscored replays carry none. */
+export function toneMark(tone: Verdict["tone"]): string {
+  return tone === "match" ? "✓ " : tone === "honest" ? "◆ " : tone === "info" ? "○ " : "";
+}
+
+/** "4.3°": height of the Sun's or Earth's centre above the terrain horizon. */
+export function fmtClear(deg: number | undefined): string {
+  return deg == null || !isFinite(deg) ? "n/a" : fmtDeg(deg, 1);
+}
+
+/** Earth (the radio link) at landing and at the end of the stay, in a few words. */
+export function earthText(r: MissionReplay, farSide?: boolean): { main: string; sub: string } | null {
+  const e = r.earth_clearance_deg_at;
+  if (!e) return null;
+  if (e.landed > 0 && e.end > 0) return { main: "In view", sub: `${fmtClear(e.landed)} above the terrain at landing` };
+  if (e.landed <= 0 && e.end <= 0) return { main: farSide ? "Never (far side)" : "Not in view", sub: `${fmtClear(-e.landed)} below the terrain horizon at landing` };
+  return { main: e.landed > 0 ? "In view at landing only" : "Not in view at landing", sub: `${fmtClear(e.landed)} at landing, ${fmtClear(e.end)} at the end` };
 }
 
 export interface OpenGap {
@@ -38,7 +59,26 @@ export function verdict(r: MissionReplay): Verdict {
   const d = r.end_minus_sunset_h;
   const pct = Math.round(r.sun_frac_at_end * 100);
   const sunset = r.first_terrain_sunset_after_landing;
+  const c = r.sun_clearance_deg_at;
+  const landed = parseUtc(r.landed_utc);
+  const up = c ? ` with the Sun ${fmtClear(c.landed)} above the terrain` : "";
   switch (r.expected) {
+    case "daylight_stay":
+      return {
+        tag: "Left in daylight",
+        tone: "visit",
+        text: `Not a scored test: light did not end this visit. It landed${up} and lifted off ${fmtDur(parseUtc(r.end_utc) - landed)} later${c ? `, with the Sun ${fmtClear(c.end)} up` : ""}.${
+          sunset && d != null && d < 0 ? ` The first terrain sunset came ${fmtSpan(d)} after lift-off.` : ""
+        }`,
+      };
+    case "still_operating":
+      return {
+        tag: "Still operating",
+        tone: "visit",
+        text: `Not a scored test: this lander has no end of mission to compare with. It landed${up}. The replay covers its first lunar day and night${
+          sunset ? `: predicted terrain sunset ${fmtSpan((parseUtc(sunset.utc) - landed) / 3600e3)} after landing` : ""
+        }${sunset && r.sunrises_after_landing.length ? `, next sunrise ${fmtDate(parseUtc(r.sunrises_after_landing[0]))}` : ""}.`,
+      };
     case "sunset_after_end":
     case "sunset_near_end":
       return {
@@ -102,6 +142,8 @@ function Strip({ r }: { r: MissionReplay }) {
   const X = (t: number) => L + ((t - w0) / (w1 - w0)) * (W - L - R);
   const lit = litIntervals(r);
   const gap = openGap(r);
+  const kind = missionKind(r);
+  const endWord = kind === "visit" ? "Lift-off" : "Reported end";
   const days = (w1 - w0) / DAY;
   const every = days > 60 ? 14 : days > 25 ? 7 : 2;
   const ticks: number[] = [];
@@ -109,7 +151,8 @@ function Strip({ r }: { r: MissionReplay }) {
   // keep the three labels from colliding: stack them on separate rows
   const marks = [
     { t: landed, label: `Landed ${fmtDate(landed, false)}`, cls: "mk-land", row: 0 },
-    { t: end, label: `Reported end ${fmtDate(end, false)} ${fmtTime(end)}`, cls: "mk-end", row: 1 },
+    // Chang'e-3: end_utc only closes the replayed first day and night, so it gets no "end" marker
+    ...(kind === "operating" ? [] : [{ t: end, label: `${endWord} ${fmtDate(end, false)} ${fmtTime(end)}`, cls: kind === "visit" ? "mk-land" : "mk-end", row: 1 }]),
     ...(sunset ? [{ t: sunset, label: `Predicted terrain sunset ${fmtDate(sunset, false)} ${fmtTime(sunset)}`, cls: "mk-sunset", row: 2 }] : []),
     ...(gap ? [{ t: gap.open, label: `Flat-horizon sunset ${fmtDate(gap.open, false)} ${fmtTime(gap.open)}`, cls: "mk-open", row: 3 }] : []),
   ];
@@ -119,7 +162,7 @@ function Strip({ r }: { r: MissionReplay }) {
   return (
     <div ref={ref} className="chart-wrap">
       {width > 0 && (
-        <svg width={W} height={H} role="img" aria-label={`Mission timeline: landed ${fmtDateTime(landed)}, reported end ${fmtDateTime(end)}${sunset ? `, predicted terrain sunset ${fmtDateTime(sunset)}` : ""}.`}>
+        <svg width={W} height={H} role="img" aria-label={`Mission timeline: landed ${fmtDateTime(landed)}, ${kind === "operating" ? "replay ends" : endWord.toLowerCase()} ${fmtDateTime(end)}${sunset ? `, predicted terrain sunset ${fmtDateTime(sunset)}` : ""}.`}>
           <rect x={L} y={laneY} width={W - L - R} height={18} className="lane-bg" />
           {lit.map(([a, b], i) => (
             <rect key={i} x={X(a)} y={laneY} width={Math.max(1, X(b) - X(a))} height={18} className="lane-fill sun" />
@@ -156,7 +199,7 @@ function Strip({ r }: { r: MissionReplay }) {
           <i className="sw sw-box dark" /> dark
         </span>
         <span>
-          <i className="sw sw-box stay" /> landing to reported end
+          <i className="sw sw-box stay" /> {kind === "visit" ? "landing to lift-off" : kind === "operating" ? "the replayed first lunar day and night" : "landing to reported end"}
         </span>
         {gap && (
           <span>
@@ -221,16 +264,19 @@ export function MissionCard({ site, heading = "h2" }: { site: Site; heading?: "h
   const sunset = r.first_terrain_sunset_after_landing;
   const gap = openGap(r);
   const player = hasReplayTrack(site);
+  const kind = missionKind(r);
+  const c = r.sun_clearance_deg_at;
+  const earth = earthText(r);
   const Hd = heading === "none" ? "h3" : heading;
   return (
     <section className={heading === "none" ? "mission" : "card mission"} aria-label={`Mission replay: ${site.name}`}>
       {heading !== "none" && (
         <div className="card-head">
           <Hd>
-            {heading === "h2" ? "Mission replay: predicted light vs what happened" : site.name}
+            {heading === "h2" ? (kind === "scored" ? "Mission replay: predicted light vs what happened" : "Mission replay: the light during the visit") : site.name}
             {site.country && heading !== "h2" ? <span className="muted"> · {site.country}</span> : null}
           </Hd>
-          <span className={`tag tag-${v.tone}`}>{v.tone === "match" ? "✓ " : v.tone === "honest" ? "◆ " : "○ "}{v.tag}</span>
+          <span className={`tag tag-${v.tone}`}>{toneMark(v.tone)}{v.tag}</span>
         </div>
       )}
       <p className="card-lede">{v.text}</p>
@@ -256,11 +302,28 @@ export function MissionCard({ site, heading = "h2" }: { site: Site; heading?: "h
           <dl className="kv">
             <dt>Landed</dt>
             <dd>{fmtDateTime(parseUtc(r.landed_utc))}</dd>
-            <dt>Reported end</dt>
-            <dd>
-              {fmtDateTime(parseUtc(r.end_utc))}: {r.end_reason}
-              {r.end_note ? ` (${r.end_note})` : ""}
-            </dd>
+            {kind === "operating" ? (
+              <>
+                <dt>Status</dt>
+                <dd>{r.end_reason}</dd>
+                <dt>Replay ends</dt>
+                <dd>{fmtDateTime(parseUtc(r.end_utc))}. This is the end of the replayed first lunar day and night, not an end of mission.</dd>
+              </>
+            ) : (
+              <>
+                <dt>{kind === "visit" ? "Lifted off" : "Reported end"}</dt>
+                <dd>
+                  {fmtDateTime(parseUtc(r.end_utc))}: {r.end_reason}
+                  {r.end_note ? ` (${r.end_note})` : ""}
+                </dd>
+              </>
+            )}
+            {kind === "visit" && (
+              <>
+                <dt>Time on the surface</dt>
+                <dd>{fmtDur(parseUtc(r.end_utc) - parseUtc(r.landed_utc))}</dd>
+              </>
+            )}
             <dt>Predicted terrain sunset</dt>
             <dd>{sunset ? <b>{fmtDateTime(parseUtc(sunset.utc))}</b> : "none in the replay window"}</dd>
             {gap && (
@@ -271,15 +334,36 @@ export function MissionCard({ site, heading = "h2" }: { site: Site; heading?: "h
                 </dd>
               </>
             )}
-            <dt>Sun at the reported end</dt>
-            <dd>{r.sun_frac_at_end > 0 ? `${Math.round(r.sun_frac_at_end * 100)}% of the disc above terrain` : "below the terrain horizon (dark)"}</dd>
+            {kind === "scored" ? (
+              <>
+                <dt>Sun at the reported end</dt>
+                <dd>{r.sun_frac_at_end > 0 ? `${Math.round(r.sun_frac_at_end * 100)}% of the disc above terrain` : "below the terrain horizon (dark)"}</dd>
+              </>
+            ) : (
+              c && (
+                <>
+                  <dt>Sun above the terrain</dt>
+                  <dd>
+                    {fmtClear(c.landed)} at landing{kind === "visit" ? `, ${fmtClear(c.end)} at lift-off` : ""} (Sun's centre over the terrain horizon, computed here)
+                  </dd>
+                </>
+              )
+            )}
+            {kind !== "scored" && earth && (
+              <>
+                <dt>Earth (radio link)</dt>
+                <dd>
+                  {earth.main}: {earth.sub}
+                </dd>
+              </>
+            )}
             {r.sunrises_after_landing.length > 0 && (
               <>
                 <dt>Predicted sunrises after landing</dt>
                 <dd>{r.sunrises_after_landing.map((s) => fmtDateTime(parseUtc(s), true)).join(" · ")}</dd>
               </>
             )}
-            <dt>Sources for the record</dt>
+            <dt>{kind === "scored" ? "Sources for the record" : "Source for the times"}</dt>
             <dd>
               {r.sources.map((s, i) => (
                 <span key={s}>

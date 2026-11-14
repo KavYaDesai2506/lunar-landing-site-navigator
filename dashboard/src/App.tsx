@@ -72,10 +72,12 @@ function useTheme(): [string, () => void] {
 /** Two facts a newcomer can check in one click each, read from the engine's own report. */
 function TrustBadges() {
   const rep = useAsync(loadValidation, "validation");
-  const idx = useAsync(loadIndex, "index");
   const t1 = rep.data?.tests?.T1_ephemeris_vs_horizons;
   const worst = t1 ? Math.max(...Object.values(t1).map((c) => Number(c.max_sep_arcsec)).filter(isFinite)) : NaN;
-  const missions = idx.data?.sites.filter((h) => h.has_mission).length ?? 0;
+  // the scored replays only: the missions the validation report tests (T6 endings + T7 negative controls).
+  // Apollo and Chang'e replays are on the Missions page too, but they are not checks, so they are not counted here.
+  const tests = rep.data?.tests;
+  const missions = new Set([...Object.keys(tests?.T6_mission_endings ?? {}), ...Object.keys(tests?.T7_negative_control ?? {})]).size;
   if (!isFinite(worst) && !missions) return null;
   return (
     <div className="badges">
@@ -85,8 +87,8 @@ function TrustBadges() {
         </a>
       )}
       {missions > 0 && (
-        <a className="badge" href={linkFor({ view: "missions" })} title="Real landings replayed against the published record. Opens Missions.">
-          ✓ {missions} real missions replayed
+        <a className="badge" href={linkFor({ view: "missions" })} title="Real missions where the predicted light is checked against the published end of the mission. Opens Missions.">
+          ✓ {missions} real mission endings checked
         </a>
       )}
     </div>

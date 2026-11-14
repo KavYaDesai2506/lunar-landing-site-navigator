@@ -121,7 +121,17 @@ export type MissionExpected =
   | "sunset_before_end"
   | "multi_night"
   | "negative_control"
-  | "tilt_limited";
+  | "tilt_limited"
+  /** added 14 Nov, not scored: landed and lifted off again in daylight (Apollo, Chang'e-6) */
+  | "daylight_stay"
+  /** added 14 Nov, not scored: no end of mission; end_utc only closes the replayed first day and night (Chang'e-3) */
+  | "still_operating";
+
+/** "scored" = one of the validation replays; the other two are shown as replays but never scored. */
+export type MissionKind = "scored" | "visit" | "operating";
+export function missionKind(r: { expected: MissionExpected }): MissionKind {
+  return r.expected === "daylight_stay" ? "visit" : r.expected === "still_operating" ? "operating" : "scored";
+}
 
 export interface MissionReplay {
   landed_utc: string;
@@ -136,6 +146,9 @@ export interface MissionReplay {
   sun_frac_at_end: number;
   end_minus_sunset_h: number | null;
   sunrises_after_landing: string[];
+  /** added 14 Nov: height of the Sun's / Earth's centre above the real terrain horizon, degrees; negative = behind terrain */
+  sun_clearance_deg_at?: { landed: number; end: number };
+  earth_clearance_deg_at?: { landed: number; end: number };
   /** added 13 Nov: flat 0-degree-horizon events over the replay window (no blocker) */
   open_events?: SiteEvent[];
   first_open_sunset_after_landing?: SiteEvent | null;

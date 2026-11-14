@@ -160,6 +160,7 @@ th .chip { margin-left: 8px; }
 .tag-honest { background: var(--alert-bg); color: var(--ink); border: 1px solid var(--alert); }
 .tag-fail { background: var(--alert-bg); color: var(--ink); border: 1px solid var(--alert); }
 .tag-info { background: var(--info-bg); color: var(--ink); border: 1px solid var(--line-strong); }
+.tag-visit { background: none; color: var(--ink-2); border: 1px dashed var(--line-strong); }
 .tag-best { background: var(--ink); color: var(--surface); margin-left: 8px; font-size: 0.68rem; letter-spacing: 0.06em; padding: 1px 6px; }
 .chip-pick { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
 .pick { border: 1px solid var(--line-strong); background: var(--surface); border-radius: 99px; padding: 4px 12px; cursor: pointer; }
