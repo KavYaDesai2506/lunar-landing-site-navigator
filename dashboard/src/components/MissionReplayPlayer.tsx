@@ -4,9 +4,10 @@ import type { Ev, Iv } from "../lib/astro";
 import { DAY, HOUR, compass, fmtAz, fmtDate, fmtDateTime, fmtDeg, fmtDur, fmtKm, fmtSpan, fmtTime, parseUtc } from "../lib/format";
 import type { MissionReplay, Site, SiteEvent } from "../lib/types";
 import { useWidth } from "./Panorama";
+import { Stars, SunDisc } from "./SpaceArt";
 
 /** Everything the animated replay needs, decoded once per site. */
-interface Replay {
+export interface Replay {
   hor: number[];
   t0: number;
   step: number;
@@ -34,7 +35,7 @@ function withT(list: SiteEvent[] | undefined): Ev[] {
   return (list ?? []).map((e) => ({ ...e, t: parseUtc(e.utc) })).sort((p, q) => p.t - q.t);
 }
 
-function build(site: Site, r: MissionReplay): Replay | null {
+export function buildReplay(site: Site, r: MissionReplay): Replay | null {
   const tr = r.track;
   const hor = site.horizons[String(site.default_mast_m)]?.el_deg;
   if (!tr || !hor || !tr.sun?.el_mdeg?.length || tr.sun.el_mdeg.length < 2) return null;
@@ -80,7 +81,7 @@ function build(site: Site, r: MissionReplay): Replay | null {
   return { hor, t0, step, n, az: body.az, el: body.el, r: body.r, a, b, landed, end, tSet, oSet, setEv, evs, lit, open, yMin, yMax, start };
 }
 
-function sunAt(R: Replay, t: number): { az: number; el: number } {
+export function sunAt(R: Replay, t: number): { az: number; el: number } {
   const x = Math.min(R.n - 1, Math.max(0, (t - R.t0) / R.step));
   const i = Math.min(R.n - 2, Math.floor(x));
   const f = x - i;
@@ -104,7 +105,7 @@ export function hasReplayTrack(site: Site): boolean {
  */
 export default function MissionReplayPlayer({ site }: { site: Site }) {
   const r = site.mission_replay;
-  const R = useMemo(() => (r ? build(site, r) : null), [site, r]);
+  const R = useMemo(() => (r ? buildReplay(site, r) : null), [site, r]);
   const [wrapRef, width] = useWidth<HTMLDivElement>();
   const [t, setT] = useState(() => R?.start ?? 0);
   const [playing, setPlaying] = useState(false);
@@ -307,6 +308,7 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
               </clipPath>
             </defs>
             <rect x={L} y={T} width={PW} height={PH} className={litIv ? "pano-sky" : "pano-sky replay-night"} />
+            <Stars x={L} y={T} width={PW} height={PH} />
             {yTicks.map((v) => (
               <g key={v}>
                 <line x1={L} x2={W - Rm} y1={Y(v)} y2={Y(v)} className="pano-grid" />
@@ -327,8 +329,9 @@ export default function MissionReplayPlayer({ site }: { site: Site }) {
             ))}
             <g clipPath={`url(#${clip})`}>
               <path d={pVis} className="path-sun" />
-              {!off && <circle cx={sx} cy={sy} r={rp} className="disc-sun" />}
-              <path d={terrFill} className="terrain-fill" />
+              {!off && <SunDisc cx={sx} cy={sy} r={rp} />}
+              <path d={terrFill} className={litIv ? "terrain-fill" : "terrain-fill terrain-night"} />
+              <path d={terrFill} className="terrain-tex" />
               <path d={terr} className="terrain-line mid" />
               <line x1={L} x2={W - Rm} y1={Y(0)} y2={Y(0)} className="open-line" />
               <path d={pHid} className="path-sun hidden" />

@@ -28,10 +28,6 @@ interface Props {
   onJump: (t: number) => void;
 }
 
-function pct(h: number, total: number) {
-  return total > 0 ? `${Math.round((h / total) * 100)}%` : "";
-}
-
 export default function StayPlanner({ model: m, t, stay, slip, onStay, onSlip, onJump }: Props) {
   const stayMs = stay * DAY;
   const base = stayStats(m, t, stayMs);
@@ -50,90 +46,82 @@ export default function StayPlanner({ model: m, t, stay, slip, onStay, onSlip, o
     return bi < 0 ? null : { t: curve.t[bi], v: curve.sun[bi] };
   }, [curve, Math.floor(t / DAY)]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const rows: { label: string; note?: string; get: (s: StayStats) => number; fmt: (v: number, s: StayStats) => string; better: 1 | -1 }[] = [
-    { label: "Sunlight (any part of the Sun)", get: (s) => s.sunH, fmt: (v, s) => `${fmtSpan(v)} · ${pct(v, s.hours)}`, better: 1 },
-    { label: "Full Sun disc", get: (s) => s.sunFullH, fmt: (v, s) => `${fmtSpan(v)} · ${pct(v, s.hours)}`, better: 1 },
-    { label: "Earth in view (any part)", get: (s) => s.earthH, fmt: (v, s) => `${fmtSpan(v)} · ${pct(v, s.hours)}`, better: 1 },
-    { label: "Sun and Earth together", get: (s) => s.bothH, fmt: (v, s) => `${fmtSpan(v)} · ${pct(v, s.hours)}`, better: 1 },
-    { label: "Longest darkness", get: (s) => s.longestDarkH, fmt: (v) => (v < 1 / 60 ? "none" : fmtSpan(v)), better: -1 },
+  const share = (v: number, st: StayStats) => (st.hours > 0 ? v / st.hours : 0);
+  const rows: { label: string; cls: string; get: (s: StayStats) => number; fmt: (v: number) => string; frac: (v: number, s: StayStats) => number | null; better: 1 | -1 }[] = [
+    { label: "Sunlight (any part of the Sun)", cls: "sun", get: (s) => s.sunH, fmt: fmtSpan, frac: share, better: 1 },
+    { label: "Full Sun disc", cls: "sun", get: (s) => s.sunFullH, fmt: fmtSpan, frac: share, better: 1 },
+    { label: "Earth in view (any part)", cls: "earth", get: (s) => s.earthH, fmt: fmtSpan, frac: share, better: 1 },
+    { label: "Sun and Earth together", cls: "both", get: (s) => s.bothH, fmt: fmtSpan, frac: share, better: 1 },
+    { label: "Longest darkness", cls: "dark", get: (s) => s.longestDarkH, fmt: (v) => (v < 1 / 60 ? "none" : fmtSpan(v)), frac: () => null, better: -1 },
   ];
+  const slipLabel = SLIPS.find((x) => x.d === slip)?.label ?? `+${slip} d`;
 
   return (
     <section className="card" aria-labelledby="plan-h">
-      <h2 id="plan-h">Land on {fmtDateTime(t, false)}: what light do you get?</h2>
-      <p className="card-lede">The stay starts at the time cursor. Pick a stay length, then slip the schedule to see what a late launch costs.</p>
-      <div className="row-controls">
-        <label className="ctl-label">Stay</label>
-        <div className="seg" role="group" aria-label="Stay length">
-          {STAYS.map((s) => (
-            <button key={s.d} aria-pressed={stay === s.d} onClick={() => onStay(s.d)} title={s.hint}>
-              {s.label}
-            </button>
-          ))}
-        </div>
-        <label className="ctl-label">Schedule slip</label>
-        <div className="seg" role="group" aria-label="Schedule slip">
-          {SLIPS.map((s) => (
-            <button key={s.d} aria-pressed={slip === s.d} onClick={() => onSlip(s.d)}>
-              {s.label}
-            </button>
-          ))}
+      <div className="plan-head">
+        <h2 id="plan-h">
+          {stay}-day stay from {fmtDateTime(t, false)}
+        </h2>
+        <div className="row-controls">
+          <label className="ctl-label">Stay</label>
+          <div className="seg" role="group" aria-label="Stay length">
+            {STAYS.map((s) => (
+              <button key={s.d} aria-pressed={stay === s.d} onClick={() => onStay(s.d)} title={s.hint}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <label className="ctl-label">Launch slips</label>
+          <div className="seg" role="group" aria-label="Schedule slip">
+            {SLIPS.map((s) => (
+              <button key={s.d} aria-pressed={slip === s.d} onClick={() => onSlip(s.d)}>
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="table-scroll">
-        <table className="data">
-          <thead>
-            <tr>
-              <th scope="col">During the {stay}-day stay</th>
-              <th scope="col" className="num">
-                Landing {fmtDate(base.a, false)}
-              </th>
+      <ul className="stay-tiles" aria-label={`During the ${stay}-day stay, landing ${fmtDate(base.a, false)}${slip > 0 ? `, and slipped ${slipLabel}` : ""}`}>
+        {rows.map((r) => {
+          const v0 = r.get(base);
+          const f0 = r.frac(v0, base);
+          const v1 = slipped ? r.get(slipped) : null;
+          const d = v1 != null ? v1 - v0 : 0;
+          const good = d * r.better > 0;
+          return (
+            <li key={r.label} className={`stay-tile ${r.cls}`}>
+              <div className="tile-label">{r.label}</div>
+              <div className="stay-value">
+                {r.fmt(v0)}
+                {f0 != null && <span className="stay-pct">{Math.round(f0 * 100)}%</span>}
+              </div>
+              {f0 != null && (
+                <div className="stay-bar" aria-hidden>
+                  <i style={{ width: `${Math.round(f0 * 100)}%` }} />
+                </div>
+              )}
               {slip > 0 && (
-                <th scope="col" className="num">
-                  Slipped {SLIPS.find((s) => s.d === slip)?.label ?? `+${slip} d`}
-                  {slipped ? ` (${fmtDate(slipped.a, false)})` : ""}
-                </th>
-              )}
-              {slipped && (
-                <th scope="col" className="num">
-                  Change
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => {
-              const v0 = r.get(base);
-              const v1 = slipped ? r.get(slipped) : null;
-              const d = v1 != null ? v1 - v0 : 0;
-              const good = d * r.better > 0;
-              return (
-                <tr key={r.label}>
-                  <th scope="row">{r.label}</th>
-                  <td className="num">{r.fmt(v0, base)}</td>
-                  {slip > 0 && <td className="num">{slipped && v1 != null ? r.fmt(v1, slipped) : "beyond the data"}</td>}
-                  {slipped && (
-                    <td className="num">
-                      {Math.abs(d) < 0.05 ? (
-                        "no change"
-                      ) : (
-                        <span className={good ? "delta good" : "delta bad"}>
-                          {good ? "▲ better" : "▼ worse"} by {fmtSpan(Math.abs(d))}
-                        </span>
-                      )}
-                    </td>
+                <div className="stay-slip">
+                  <span className="muted">{slipLabel}:</span>{" "}
+                  {slipped && v1 != null ? (
+                    <>
+                      <b>{r.fmt(v1)}</b>{" "}
+                      {Math.abs(d) < 0.05 ? <span className="muted">no change</span> : <span className={good ? "delta good" : "delta bad"}>{good ? "▲" : "▼"} {fmtSpan(Math.abs(d))}</span>}
+                    </>
+                  ) : (
+                    "beyond the data"
                   )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
       {base.clipped && <p className="note">The stay runs past the end of the precomputed window ({fmtDate(m.tEnd)}); numbers cover the part inside it.</p>}
       {slipOut && <p className="note">A slip of {slip} days from this date lands outside the precomputed window (ends {fmtDate(m.tEnd)}). Pick an earlier landing date to compare a one-year slip.</p>}
 
-      <h3>Launch window finder: light for every landing date</h3>
+      <h3>Every landing date: click one to land then</h3>
       <div data-hl="window">
         <SlipChart model={m} t={t} slipT={slipped ? slipT : null} stay={stay} curve={curve} onJump={onJump} />
       </div>

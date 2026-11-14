@@ -35,15 +35,22 @@ export default function MissionsView() {
       </div>
     );
 
+  const tally = { match: 0, honest: 0, info: 0 };
+  for (const site of sites) tally[verdict(site.mission_replay!).tone]++;
+
   return (
     <div className="stack">
       <section className="card" aria-labelledby="ms-h">
-        <h1 id="ms-h">Did the light end the mission?</h1>
-        <p className="card-lede">
-          {sites.length} real landings, replayed by the same engine. For each: when did the terrain take the Sun, which terrain did it, and does that match the record? Click a mission to watch it happen.
-        </p>
+        <div className="card-head">
+          <h1 id="ms-h">Did the light end the mission?</h1>
+          <div className="tally">
+            <span className="tag tag-match">✓ {tally.match} predicted within hours of the record</span>
+            <span className="tag tag-honest">◆ {tally.honest} ended by something light cannot explain</span>
+            {tally.info > 0 && <span className="tag tag-info">○ {tally.info} survived the night</span>}
+          </div>
+        </div>
         <div className="table-scroll">
-          <table className="data">
+          <table className="data data-big">
             <thead>
               <tr>
                 <th scope="col">Mission</th>
@@ -68,7 +75,7 @@ export default function MissionsView() {
                 const d = r.end_minus_sunset_h;
                 const g = openGap(r);
                 return (
-                  <tr key={site.id}>
+                  <tr key={site.id} className="row-click" onClick={() => setState({ open: site.id, hl: `mission-${site.id}` })}>
                     <th scope="row">
                       <button className="linkish" onClick={() => setState({ open: site.id, hl: `mission-${site.id}` })} title="Open the replay below">
                         {site.name}
@@ -99,7 +106,7 @@ export default function MissionsView() {
         <details className="explain">
           <summary>How to read this table</summary>
           <p>
-            Times are UTC. "Flat-horizon tool" is the same sunset against a flat 0° horizon, which is what a tool without terrain assumes: later where ridges stand in the way, earlier on a summit such as IM-2's. "Reported end" comes from
+            {sites.length} real landings, replayed by the same engine. Click a row to watch it happen. Times are UTC. "Flat-horizon tool" is the same sunset against a flat 0° horizon, which is what a tool without terrain assumes: later where ridges stand in the way, earlier on a summit such as IM-2's. "Reported end" comes from
             the cited public sources and some are known only to the day.
           </p>
           <p>Two rows are deliberate honesty checks: missions that ended for reasons light cannot explain. The model knows terrain and geometry; it does not know lander tilt, thermal limits or battery state.</p>

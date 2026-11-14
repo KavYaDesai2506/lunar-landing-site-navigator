@@ -7,7 +7,7 @@ import { useSyncExternalStore } from "react";
 import { isoMinute, normLon, parseUtc, roundCoord } from "./format";
 import { UPCOMING } from "./upcoming";
 
-export type View = "site" | "compare" | "missions" | "evidence" | "sites";
+export type View = "site" | "compare" | "missions" | "evidence" | "sites" | "about";
 export type Lang = "en";
 
 export interface AppState {
@@ -44,7 +44,7 @@ export const DEFAULTS: AppState = {
   hl: null,
 };
 
-const VIEWS: View[] = ["site", "compare", "missions", "evidence", "sites"];
+const VIEWS: View[] = ["site", "compare", "missions", "evidence", "sites", "about"];
 const ALIAS: Record<string, View> = { explore: "site", map: "sites", custom: "sites" };
 
 /**
@@ -101,6 +101,7 @@ function parse(hash: string): AppState {
 function serialise(s: AppState): string {
   const q: string[] = [];
   const add = (k: string, v: string | number) => q.push(`${k}=${encodeURIComponent(String(v)).replace(/%3A/g, ":").replace(/%2C/g, ",")}`);
+  if (s.view === "about") return "#/about";
   if (s.view === "site" || s.site !== DEFAULTS.site) add("site", s.site);
   if (s.site === "custom" && s.lat != null && s.lon != null) {
     add("lat", s.lat);

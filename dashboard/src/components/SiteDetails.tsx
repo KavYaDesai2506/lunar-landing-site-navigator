@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import Info from "./Info";
+import PoleLocator, { onRelief } from "./PoleLocator";
 import SourceLink from "./SourceLink";
 import { bodyAt, eventBlocker, featureLabels, mastKeys, presentFrac } from "../lib/astro";
 import type { Model } from "../lib/astro";
@@ -104,16 +105,6 @@ export function SensitivityCard({ s }: { s: Sensitivity }) {
   return (
     <section className="card" aria-labelledby="sens-h">
       <h2 id="sens-h">A few metres matter</h2>
-      <p className="card-lede">
-        {moved ? (
-          <>
-            Moving <b>{Math.round(s.best.dist_m)} m</b> toward bearing <b>{fmtAz(s.best.bearing_deg)}</b> raises average illumination by <b>{s.gain_pp.toFixed(2)} points</b> (to {s.best.avg_pct.toFixed(1)}%).
-          </>
-        ) : (
-          <>This point is already the best-lit pixel within {R * s.res_m} m.</>
-        )}{" "}
-        Within {R * s.res_m} m of the site, average illumination ranges from <b>{lo.toFixed(1)}%</b> to <b>{hi.toFixed(1)}%</b>.
-      </p>
       <div className="sens-wrap">
         <svg viewBox={`0 0 ${n * cell} ${n * cell}`} className="sens" role="img" aria-label={`Grid of average illumination for DEM pixels around the site, from ${lo.toFixed(1)} to ${hi.toFixed(1)} percent.`}>
           {Array.from({ length: n * n }, (_, k) => {
@@ -137,18 +128,32 @@ export function SensitivityCard({ s }: { s: Sensitivity }) {
             );
           })}
         </svg>
-        <div className="sens-key">
-          <div>
-            <i className="sw sw-ring centre" /> the site pixel ({s.centre.avg_pct.toFixed(1)}%)
-          </div>
-          {moved && (
-            <div>
-              <i className="sw sw-ring best" /> best pixel ({s.best.avg_pct.toFixed(1)}%)
+        <div className="fact-col">
+          <div className="tile">
+            <div className="tile-label">Best pixel nearby</div>
+            <div className="tile-value">{moved ? `+${s.gain_pp.toFixed(2)} pts` : "this one"}</div>
+            <div className="tile-state">
+              {moved ? (
+                <>
+                  <i className="sw sw-ring best" /> {Math.round(s.best.dist_m)} m toward {fmtAz(s.best.bearing_deg)} → {s.best.avg_pct.toFixed(1)}%
+                </>
+              ) : (
+                <>already the best-lit pixel within {R * s.res_m} m</>
+              )}
             </div>
-          )}
-          <div className="seq-ramp" aria-hidden />
-          <div className="muted">
-            {lo.toFixed(0)}% to {hi.toFixed(0)}% average illumination (18.6 yr). Each cell is one {s.res_m} m DEM pixel on the polar-stereographic grid; rows and columns are grid offsets, the compass bearing is in the sentence above.
+          </div>
+          <div className="tile">
+            <div className="tile-label">Range within {R * s.res_m} m</div>
+            <div className="tile-value">
+              {lo.toFixed(1)}–{hi.toFixed(1)}%
+            </div>
+            <div className="seq-ramp" aria-hidden />
+            <div className="tile-state">
+              <i className="sw sw-ring centre" /> the site pixel: {s.centre.avg_pct.toFixed(1)}%{" "}
+              <Info label="How to read the grid">
+                Average illumination over 18.6 years. Each cell is one {s.res_m} m DEM pixel on the polar-stereographic grid; rows and columns are grid offsets, and the compass bearing of the best pixel is given beside it.
+              </Info>
+            </div>
           </div>
         </div>
       </div>
@@ -298,17 +303,6 @@ export function BlockerRadar({ model: m, t }: { model: Model; t: number }) {
   return (
     <section className="card" aria-labelledby="radar-h">
       <h2 id="radar-h">Which terrain sets the horizon</h2>
-      <p className="card-lede">
-        The site from above. In each direction, the shape reaches out to the terrain that blocks the view. Half of the horizon is set by terrain within <b>{fmtKm(sorted[Math.floor(sorted.length / 2)])}</b>;{" "}
-        {local > 0.005 ? (
-          <>
-            <b>{Math.round(local * 100)}%</b> of it is the ground slope within 1 km.
-          </>
-        ) : (
-          <>none of it is ground slope within 1 km.</>
-        )}
-        {m.blk.approx ? " (Blocking distances are from the 2 m mast horizon.)" : ""}
-      </p>
       <div className="radar-wrap">
         <svg viewBox={`0 0 ${S} ${S}`} className="radar" role="img" aria-label="Polar plot of the distance to the horizon-setting terrain in every direction, with the current Sun and Earth directions.">
           {rings.map((r) => (
@@ -353,16 +347,32 @@ export function BlockerRadar({ model: m, t }: { model: Model; t: number }) {
           })}
           <circle cx={c} cy={c} r={3.5} className="radar-site" />
         </svg>
-        <div className="sens-key">
-          <div>
-            <i className="sw sw-dot sunfill" /> toward the Sun now ({fmtAz(sun.az)}): horizon set {fmtKm(dist[Math.round(sun.az * 2) % dist.length])} away
+        {onRelief(m.site.requested.lat, m.site.requested.lon) && <PoleLocator model={m} t={t} />}
+        <div className="fact-col">
+          <div className="tile">
+            <div className="tile-label">Half the horizon is set within</div>
+            <div className="tile-value">{fmtKm(sorted[Math.floor(sorted.length / 2)])}</div>
+            <div className="tile-state">{local > 0.005 ? `${Math.round(local * 100)}% of it is ground slope within 1 km` : "none of it is ground slope within 1 km"}</div>
+          </div>
+          <div className="tile">
+            <div className="tile-label">Toward the Sun now</div>
+            <div className="tile-value">{fmtKm(dist[Math.round(sun.az * 2) % dist.length])}</div>
+            <div className="tile-state">
+              <i className="sw sw-dot sunfill" /> horizon set that far away, at {fmtAz(sun.az)}
+            </div>
           </div>
           {earthEver && (
-            <div>
-              <i className="sw sw-dot earthfill" /> toward Earth now ({fmtAz(earth.az)})
+            <div className="tile">
+              <div className="tile-label">Toward Earth now</div>
+              <div className="tile-value">{fmtKm(dist[Math.round(earth.az * 2) % dist.length])}</div>
+              <div className="tile-state">
+                <i className="sw sw-dot earthfill" /> at {fmtAz(earth.az)}
+              </div>
             </div>
           )}
-          <div className="muted">Distance scale is logarithmic. Named features are the ones that cause rise and set events at this site.</div>
+          <p className="note">
+            The plot is the site from above: in each direction the shape reaches out to the terrain that blocks the view (logarithmic distance).{m.blk.approx ? " Blocking distances are from the 2 m mast horizon." : ""}
+          </p>
         </div>
       </div>
     </section>

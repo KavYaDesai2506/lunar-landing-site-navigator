@@ -1,22 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_API, apiHealth, getApiBase, loadFeatures, loadIndex, resetApiBase, setApiBase, useAsync } from "../lib/data";
-import { fmtLat, fmtLon, fmtPct, fmtSpan, normLon, roundCoord } from "../lib/format";
+import { fmtKm, fmtLat, fmtLon, fmtPct, fmtSpan, normLon, roundCoord } from "../lib/format";
+import { RELIEF_CREDIT, R_MOON, moonKm, proj, reliefFor, reliefUrl, unproj } from "../lib/polar";
 import { setState, useAppState } from "../lib/state";
 import type { PolarFeature, SiteHeadline } from "../lib/types";
-
-const R_MOON = 1737.4;
-/** South-polar stereographic, 0° E up, 90° E right (the usual LOLA polar map layout). */
-function proj(lat: number, lon: number): [number, number] {
-  const r = 2 * R_MOON * Math.tan(((90 + lat) * Math.PI) / 360);
-  const l = (lon * Math.PI) / 180;
-  return [r * Math.sin(l), r * Math.cos(l)];
-}
-function unproj(x: number, y: number): [number, number] {
-  const r = Math.hypot(x, y);
-  const lat = -90 + (Math.atan(r / (2 * R_MOON)) * 360) / Math.PI;
-  const lon = ((Math.atan2(x, y) * 180) / Math.PI + 360) % 360;
-  return [lat, lon];
-}
 
 const ZOOMS = [
   { km: 30, label: "30 km (Shackleton)" },
@@ -27,8 +14,9 @@ const ZOOMS = [
 function PolarMap({ sites, features, picked, onPick }: { sites: SiteHeadline[]; features: PolarFeature[]; picked: [number, number] | null; onPick: (lat: number, lon: number) => void }) {
   const [zi, setZi] = useState(1);
   const ext = ZOOMS[zi].km;
-  const S = 520;
+  const S = 640;
   const k = S / 2 / ext;
+  const rel = reliefFor(ext);
   const P = (lat: number, lon: number): [number, number] => {
     const [x, y] = proj(lat, lon);
     return [S / 2 + x * k, S / 2 - y * k];
@@ -68,7 +56,9 @@ function PolarMap({ sites, features, picked, onPick }: { sites: SiteHeadline[]; 
           onPick(+lat.toFixed(4), +lon.toFixed(3));
         }}
       >
-        <rect width={S} height={S} className="map-bg" rx={8} />
+        <rect width={S} height={S} className="map-bg" />
+        <image href={reliefUrl(rel)} x={S / 2 - rel * k} y={S / 2 - rel * k} width={2 * rel * k} height={2 * rel * k} className="relief" preserveAspectRatio="none" />
+        <rect width={S} height={S} className="relief-tint" />
         {shown.map((f) => {
           const [x, y] = P(f.lat, f.lon);
           const r = (f.d / 2) * k;
@@ -76,7 +66,7 @@ function PolarMap({ sites, features, picked, onPick }: { sites: SiteHeadline[]; 
           return (
             <g key={f.n}>
               <circle cx={x} cy={y} r={r} className={f.t === "m" ? "map-mons" : "map-crater"} />
-              {r > 16 && (
+              {r > 20 && (
                 <text x={x} y={y + (f.t === "m" ? 4 : r > 40 ? -r + 14 : 4)} textAnchor="middle" className="map-label">
                   {f.n}
                 </text>
@@ -122,7 +112,7 @@ function PolarMap({ sites, features, picked, onPick }: { sites: SiteHeadline[]; 
               }}
             >
               <title>{`${h.name}: open this site`}</title>
-              <circle cx={x} cy={y} r={6} />
+              <circle cx={x} cy={y} r={6.5} />
               <text x={x + (right ? 9 : -9)} y={y + 4 + (ext > 100 && h.group === "polar" ? (i % 3) * 12 - 12 : 0)} textAnchor={right ? "start" : "end"} className="map-pin-label">
                 {h.name}
               </text>
@@ -140,7 +130,7 @@ function PolarMap({ sites, features, picked, onPick }: { sites: SiteHeadline[]; 
             );
           })()}
       </svg>
-      <p className="note">Circles are named craters and mountains, in outline: a locator, not an image.</p>
+      <p className="note">{RELIEF_CREDIT}. Names from the IAU Gazetteer.</p>
     </div>
   );
 }
@@ -206,6 +196,15 @@ export default function SitesView() {
     return list.reduce((best, h) => (d(h) < d(best) ? h : best), list[0]);
   }, [idx.data, valid, latN, lonN]);
 
+  const nearest = useMemo(() => {
+    const list = idx.data?.sites ?? [];
+    if (!valid) return [];
+    return list
+      .map((h) => ({ h, km: moonKm(latN, lonN, h.lat, h.lon) }))
+      .sort((a, b) => a.km - b.km)
+      .slice(0, 5);
+  }, [idx.data, valid, latN, lonN]);
+
   const rows = useMemo(() => {
     const list = [...(idx.data?.sites ?? [])];
     const [k, dir] = sort;
@@ -224,15 +223,18 @@ export default function SitesView() {
 
   return (
     <div className="stack">
-      <div className="grid-2">
-        <section className="card" aria-labelledby="map-h">
-          <h2 id="map-h">South pole: click a pin to open a site, anywhere else to pick your own point</h2>
+      <div className="map-layout">
+        <section className="card map-card" aria-labelledby="map-h">
+          <h2 id="map-h">Lunar south pole</h2>
+          <p className="map-how">
+            <span className="map-key pin" aria-hidden /> pin: open that site <span className="map-key cross" aria-hidden /> anywhere else: pick your own point
+          </p>
           <PolarMap sites={idx.data?.sites ?? []} features={feats.data ?? []} picked={valid && latN < -60 ? [latN, normLon(lonN)] : null} onPick={(a, b) => (setLat(String(a)), setLon(String(b)))} />
         </section>
 
-        <section className="card" aria-labelledby="custom-h" data-hl="custom">
+        <div className="map-side">
+        <section className="card custom-card" aria-labelledby="custom-h" data-hl="custom">
           <h2 id="custom-h">Analyse your own point</h2>
-          <p className="card-lede">Click the map or type a point. It runs through the same engine as the preset sites and usually takes a few seconds.</p>
           <form
             className="form"
             onSubmit={(e) => {
@@ -266,6 +268,7 @@ export default function SitesView() {
               Analyse this point →
             </button>
           </form>
+          <p className="note">Same engine as the preset sites. Usually a few seconds.</p>
           {!valid && <p className="note alert">Latitude must be between −90 and 90, longitude between 0 and 360.</p>}
           {valid && (
             <p className="note">
@@ -330,6 +333,29 @@ export default function SitesView() {
             <pre className="code">.venv/Scripts/python -m uvicorn lunarnav.api:app --app-dir src --port 8765</pre>
           </details>
         </section>
+
+        {nearest.length > 0 && (
+          <section className="card near-card" aria-labelledby="near-h">
+            <h2 id="near-h">Preset sites nearest this point</h2>
+            <ul className="near-list">
+              {nearest.map(({ h, km }) => (
+                <li key={h.id}>
+                  <button className="near-row" onClick={() => setState({ view: "site", site: h.id, lat: null, lon: null })} title={`Open ${h.name}`}>
+                    <span className="near-name">{h.name}</span>
+                    <span className="near-km">{fmtKm(km)}</span>
+                    <span className="near-bar" aria-hidden>
+                      <i style={{ width: `${Math.round(h.sun_avg_pct)}%` }} />
+                    </span>
+                    <span className="near-pct" title="Average illumination, 2 m mast">
+                      {fmtPct(h.sun_avg_pct, 0)} lit
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        </div>
       </div>
 
       <section className="card" aria-labelledby="cat-h">

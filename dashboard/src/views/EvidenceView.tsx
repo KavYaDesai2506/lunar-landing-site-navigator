@@ -337,15 +337,17 @@ function Body({ id, cases }: { id: string; cases: Record<string, Case> }) {
   }
   return (
     <>
+      <div className="case-grid">
       {entries.map(([k, c]) => (
-        <div key={k}>
-          <p>
+        <div key={k} className="case">
+          <p className="case-h">
             <b>{k.replace(/_/g, " ")}</b> <Status pass={c.pass} />
           </p>
           <p className="note">Criterion: {c.criterion}<Links c={c} /></p>
           <Generic c={c} />
         </div>
       ))}
+      </div>
       {id.startsWith("T2") && (
         <p className="note">
           The two tools agree on where the Sun and Earth are and disagree on when the local ridge hides the Sun. QuickMap samples every 4 hours and evaluates a slightly different point, so this comparison is reported, not scored.
@@ -380,7 +382,7 @@ export default function EvidenceView() {
   const unc = shack.data?.uncertainty;
   const uncSites = idx.data?.sites.filter((h) => h.has_uncertainty).map((h) => h.name) ?? [];
   return (
-    <div className="stack">
+    <div className="stack evidence">
       <section className="card" aria-labelledby="ev-h1">
         <h1 id="ev-h1">Evidence: every claim, tested against a published answer</h1>
         <p className="card-lede">
@@ -433,7 +435,7 @@ export default function EvidenceView() {
 
       <section className="card" aria-labelledby="lim-h">
         <h2 id="lim-h">What this tool does not know</h2>
-        <ul className="plain spaced">
+        <ul className="plain spaced cols">
           <li>
             <b>Lander orientation.</b> A tipped lander can lose power in full terrain sunlight (IM-1, IM-2). The model is a point on a mast.
           </li>

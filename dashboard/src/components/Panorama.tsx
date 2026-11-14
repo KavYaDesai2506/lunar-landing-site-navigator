@@ -3,6 +3,7 @@ import { angDiff, blockerAt, bodyAt, featureLabels, horizonAt, inIntervals, isPo
 import type { Ev, Model } from "../lib/astro";
 import { DAY, compass, fmtAz, fmtDate, fmtDateTime, fmtDeg, fmtKm, fmtTime } from "../lib/format";
 import type { Target } from "../lib/types";
+import { EarthDisc, Stars, SunDisc, earthPhase } from "./SpaceArt";
 
 export function useWidth<T extends HTMLElement>(): [React.RefObject<T>, number] {
   const ref = useRef<T>(null);
@@ -315,7 +316,8 @@ export default function Panorama({ model: m, t, onJump, compact, yRange, label }
                 <rect x={L} y={T} width={PW} height={PH} />
               </clipPath>
             </defs>
-            <rect x={L} y={T} width={PW} height={PH} className="pano-sky" />
+            <rect x={L} y={T} width={PW} height={PH} className={sunUp || !terrain ? "pano-sky" : "pano-sky sky-night"} />
+            <Stars x={L} y={T} width={PW} height={PH} />
             {yTicks.map((v) => (
               <g key={v}>
                 <line x1={L} x2={W - R} y1={Y(v)} y2={Y(v)} className={v === 0 ? "pano-zero" : "pano-grid"} />
@@ -338,10 +340,11 @@ export default function Panorama({ model: m, t, onJump, compact, yRange, label }
               {/* visible paths and discs sit behind the terrain */}
               {paths.earth && <path d={paths.earth.vis} className="path-earth" />}
               <path d={paths.sun.vis} className="path-sun" />
-              {earthD && !earthD.off && <circle cx={earthD.x} cy={earthD.y} r={earthD.rp} className="disc-earth" />}
-              {sunD && !sunD.off && <circle cx={sunD.x} cy={sunD.y} r={sunD.rp} className="disc-sun" />}
+              {earthD && !earthD.off && <EarthDisc cx={earthD.x} cy={earthD.y} r={earthD.rp} phase={earthPhase(sunNow, earthNow)} />}
+              {sunD && !sunD.off && <SunDisc cx={sunD.x} cy={sunD.y} r={sunD.rp} />}
 
-              <path d={terrainGeo.fill} className={terrain ? "terrain-fill" : "terrain-fill terrain-off"} />
+              <path d={terrainGeo.fill} className={terrain ? (sunUp ? "terrain-fill" : "terrain-fill terrain-night") : "terrain-fill terrain-off"} />
+              {terrain && <path d={terrainGeo.fill} className="terrain-tex" />}
               {terrain ? (
                 <>
                   <path d={terrainGeo.strokes[2]} className="terrain-line far" />

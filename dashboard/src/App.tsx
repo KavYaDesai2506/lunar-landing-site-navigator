@@ -1,5 +1,6 @@
 import { Component, Suspense, lazy, useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { SpaceDefs } from "./components/SpaceArt";
 import GuidePanel, { guideDismissed, rememberGuide, useHighlight } from "./components/GuidePanel";
 import { loadIndex, loadValidation, useAsync } from "./lib/data";
 import { fmtDate, parseUtc } from "./lib/format";
@@ -11,6 +12,7 @@ const CompareView = lazy(() => import("./views/CompareView"));
 const MissionsView = lazy(() => import("./views/MissionsView"));
 const EvidenceView = lazy(() => import("./views/EvidenceView"));
 const SitesView = lazy(() => import("./views/SitesView"));
+const AboutView = lazy(() => import("./views/AboutView"));
 
 // Labels changed in the 14 Nov redesign; the route names behind them did not (see lib/state.ts).
 const NAV: [View, string, string][] = [
@@ -105,12 +107,13 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.lang = "en";
-    const names: Record<View, string> = { site: "Explore", compare: "Compare", missions: "Missions", evidence: "Evidence", sites: "Map & custom" };
+    const names: Record<View, string> = { site: "Explore", compare: "Compare", missions: "Missions", evidence: "Evidence", sites: "Map & custom", about: "About us" };
     document.title = `${names[s.view]} · Lunar Landing Site Navigator`;
   }, [s.view]);
 
   return (
     <>
+      <SpaceDefs />
       <header className="topbar">
         <div className="brand">
           <strong>Lunar Landing Site Navigator</strong>
@@ -131,6 +134,17 @@ export default function App() {
               {label}
             </a>
           ))}
+          <a
+            className="nav-quiet"
+            href="#/about"
+            aria-current={s.view === "about" ? "page" : undefined}
+            onClick={(e) => {
+              e.preventDefault();
+              setState({ view: "about" });
+            }}
+          >
+            About
+          </a>
         </nav>
         <div className="top-tools">
           <button className="btn" onClick={() => showGuide(!guide)} aria-expanded={guide} aria-controls="guide" title="Five common jobs, one click each">
@@ -164,13 +178,23 @@ export default function App() {
               {s.view === "missions" && <MissionsView />}
               {s.view === "evidence" && <EvidenceView />}
               {s.view === "sites" && <SitesView />}
+              {s.view === "about" && <AboutView />}
             </Suspense>
           </Boundary>
         )}
       </main>
       <footer className="footer">
         Terrain: LOLA elevation models from NASA Goddard's PGDA (products 69, 78, 90) and SLDEM2015. Geometry: NAIF SPICE. Feature names: IAU Gazetteer of Planetary Nomenclature. All times UTC.
-        {idx.data ? ` Site data computed ${fmtDate(parseUtc(idx.data.generated_utc))}.` : ""} Built for NASA Space Apps 2026; not an official NASA product.
+        {idx.data ? ` Site data computed ${fmtDate(parseUtc(idx.data.generated_utc))}.` : ""} Built for NASA Space Apps 2026; not an official NASA product.{" "}
+        <a
+          href="#/about"
+          onClick={(e) => {
+            e.preventDefault();
+            setState({ view: "about" });
+          }}
+        >
+          About us
+        </a>
       </footer>
     </>
   );

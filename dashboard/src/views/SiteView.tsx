@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
+import MiniReplay from "../components/MiniReplay";
 import { MissionCard } from "../components/Mission";
 import NowPanel from "../components/NowPanel";
 import Panorama from "../components/Panorama";
@@ -470,7 +471,7 @@ export default function SiteView() {
       )}
 
       <div className="cockpit">
-        <NowPanel model={model} t={t} live={live} lang={s.lang} head={head} onJump={jump} onTab={openTab} />
+        <NowPanel model={model} t={t} live={live} lang={s.lang} head={head} onJump={jump} onTab={openTab} extra={<MiniReplay />} />
 
         <section className="card card-hero sky" aria-labelledby="pano-h">
           <h2 id="pano-h" className="sr-only">
@@ -505,10 +506,10 @@ export default function SiteView() {
           {tab === "mission" && <MissionCard site={site} />}
           {tab === "plan" && <StayPlanner model={model} t={t} stay={s.stay} slip={s.slip} onStay={(d) => setState({ stay: d })} onSlip={(d) => setState({ slip: d })} onJump={jump} />}
           {tab === "longterm" && (
-            <>
+            <div className={site.sensitivity ? "pair" : "stack"}>
               <LongTermCard site={site} mast={model.mast} onMast={custom ? undefined : (k) => setState({ mast: k })} />
               {site.sensitivity && <SensitivityCard s={site.sensitivity} />}
-            </>
+            </div>
           )}
           {tab === "horizon" && (
             <>

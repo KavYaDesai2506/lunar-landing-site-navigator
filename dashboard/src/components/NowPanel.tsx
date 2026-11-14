@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { bodyAt, eventBlocker, inIntervals, nextEvent, nextOpen, openUpAt, presentFrac } from "../lib/astro";
 import type { Ev, Model } from "../lib/astro";
 import { DAY, HOUR, fmtAz, fmtDate, fmtDateTime, fmtDeg, fmtDur, fmtKm, fmtSpan, fmtTime } from "../lib/format";
@@ -16,6 +17,8 @@ interface Props {
   onJump: (t: number) => void;
   /** open a drawer tab on the site view */
   onTab?: (tab: string) => void;
+  /** placed straight after the sunset tile (the first-screen mission replay) */
+  extra?: ReactNode;
 }
 
 export function whereText(m: Model, e: Ev): string {
@@ -45,7 +48,27 @@ function Sure({ e, onTab }: { e: Ev; onTab?: (tab: string) => void }) {
   );
 }
 
-export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab }: Props) {
+const ICON = {
+  sun: (
+    <svg viewBox="0 0 16 16" aria-hidden>
+      <circle cx="8" cy="8" r="3.4" />
+      <path d="M8 .8v2.2M8 13v2.2M.8 8H3M13 8h2.2M2.9 2.9l1.6 1.6M11.5 11.5l1.6 1.6M2.9 13.1l1.6-1.6M11.5 4.5l1.6-1.6" />
+    </svg>
+  ),
+  clock: (
+    <svg viewBox="0 0 16 16" aria-hidden>
+      <circle cx="8" cy="8.6" r="5.6" />
+      <path d="M8 5.4v3.4l2.2 1.4M6.2 1h3.6" />
+    </svg>
+  ),
+  ridge: (
+    <svg viewBox="0 0 16 16" aria-hidden>
+      <path d="M.8 13.6 5.6 4.4l2.6 4 1.9-2.6 5.1 7.8z" />
+    </svg>
+  ),
+};
+
+export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab, extra }: Props) {
   const sun = bodyAt(m, "sun", t);
   const earth = bodyAt(m, "earth", t);
   const sunUp = sun.frac > 0;
@@ -71,16 +94,17 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab 
   if (sunEv) {
     if (sunUp && !openUp) {
       const back = nextOpen(m, "sun", "rise", t);
-      openLine = `A flat-horizon tool says the Sun is already down${back && exact ? ` until ${fmtDateTime(back.t, false)}` : ""}: this site stands above its surroundings.`;
+      openLine = `already calls it night${back && exact ? `, until ${fmtDateTime(back.t, false)}` : ""}`;
     } else if (!sunUp && openUp) {
       const gone = nextOpen(m, "sun", "set", t);
-      openLine = `A flat-horizon tool calls this spot lit right now${gone && exact ? `, until ${fmtDateTime(gone.t, false)}` : ""}.`;
+      openLine = `calls this spot lit now${gone && exact ? `, until ${fmtDateTime(gone.t, false)}` : ""}`;
     } else if (openEv) {
       const gap = (openEv.t - sunEv.t) / HOUR;
-      openLine = `A flat-horizon tool says ${openWhen(openEv.t)}: ${fmtSpan(gap)} ${gap >= 0 ? "too late" : "too early"}.`;
-    } else openLine = `On a flat horizon the Sun would not ${sunUp ? "set" : "rise"} before the data ends.`;
+      openLine = `${openWhen(openEv.t)} · ${fmtSpan(Math.abs(gap))} ${gap >= 0 ? "too late" : "too early"}`;
+    } else openLine = `no ${sunUp ? "sunset" : "sunrise"} before the data ends`;
   }
 
+  const ridge = sunEv ? eventBlocker(m, sunEv) : null;
   const secs = live && sunEv != null && sunEv.t - t < DAY;
   const dur = (e: Ev | null) => (e ? fmtDur(e.t - t, live && e.t - t < DAY) : "");
 
@@ -123,14 +147,33 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab 
 
   return (
     <section aria-label="Current conditions" className="now">
-      <p className="headline" lang={lang}>
-        {headline}
-      </p>
+      <div className="status" lang={lang}>
+        <span className={`stat-chip ${sunUp ? "sun" : "dark"}`}>
+          {ICON.sun}
+          {!sunUp ? "Sun behind terrain" : sun.frac < 0.999 ? `${Math.max(1, Math.round(sun.frac * 100))}% of Sun visible` : `Full Sun, ${fmtDeg(sun.clearance)} above terrain`}
+        </span>
+        <span className="stat-chip">
+          {ICON.clock}
+          {sunEv ? `${sunUp ? "last light" : "first light"} in ${fmtDur(sunEv.t - t)}` : sunUp ? "no sunset in this period" : "no sunrise before the data ends"}
+        </span>
+        {sunEv && ridge && (
+          <button type="button" className="stat-chip ridge" data-hl="ridge" onClick={() => onTab?.("horizon")} title={`The terrain that ${sunUp ? "ends" : "returns"} the light. Opens Horizon source.`}>
+            {ICON.ridge}
+            <b>{ridge.local ? "ground slope at the site" : ridge.phrase ?? "terrain"}</b>
+            <span>
+              {fmtKm(ridge.dist_km)} · {fmtAz(sunEv.az_deg)}
+            </span>
+            <i className="go" aria-hidden>
+              ›
+            </i>
+          </button>
+        )}
+      </div>
       <div className="sr-only" aria-live="polite">
         {spoken}
       </div>
       <div className="tiles">
-        <div className="tile tile-wide" data-hl="ridge">
+        <div className="tile tile-wide">
           <div className="tile-label">{sunEv ? (sunUp ? "Terrain sunset in" : "Terrain sunrise in") : sunUp ? "Sunlight" : "Darkness"}</div>
           {sunEv ? (
             <>
@@ -138,19 +181,20 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab 
               <div className="tile-state">
                 {pin(sunEv.t, true)} <Sure e={sunEv} onTab={onTab} />
               </div>
-              <div className="tile-cause">
-                <button type="button" className="chip chip-why chip-btn" onClick={() => onTab?.("horizon")} title="See which terrain sets the horizon in every direction">
-                  Why
-                </button>{" "}
-                {sunUp ? "Sets behind terrain" : "Rises over terrain"} {whereText(m, sunEv)}.
-              </div>
-              {openLine && <div className="tile-open">{openLine}</div>}
-              {(sunBack || sunGone) && (
-                <div className="tile-sub">
-                  {sunBack ? `Then dark for ${fmtDur(sunBack.t - sunEv.t)}.` : ""}
-                  {sunGone ? `Then lit for ${fmtDur(sunGone.t - sunEv.t)}.` : ""}
-                </div>
-              )}
+              <dl className="tile-facts">
+                {openLine && (
+                  <>
+                    <dt>Flat-horizon tool</dt>
+                    <dd>{openLine}</dd>
+                  </>
+                )}
+                {(sunBack || sunGone) && (
+                  <>
+                    <dt>{sunBack ? "Then dark for" : "Then lit for"}</dt>
+                    <dd>{fmtDur((sunBack ?? sunGone)!.t - sunEv.t)}</dd>
+                  </>
+                )}
+              </dl>
             </>
           ) : (
             <div className="tile-state big" lang={lang}>
@@ -158,6 +202,8 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab 
             </div>
           )}
         </div>
+
+        {extra}
 
         <div className="tile">
           <div className="tile-label">{sun.clearance >= 0 ? "Sun clears the terrain by" : sunUp ? "Sun is slipping behind terrain" : "Sun is below the terrain by"}</div>
