@@ -65,7 +65,20 @@ cd dashboard && npm install && npm run sync-data && npm run dev
 
 ## How this was built
 
-AI tools were used extensively; see the submission's AI-use statement for details.
+### Use of Super Intelligence (SI) tools
+
+We used Anthropic's Claude a lot, and we want judges to see exactly where.
+
+| Part | SI involvement | What we did |
+|---|---|---|
+| Python engine (`src/`), tests (`tests/`), scripts (`scripts/`) | **Code generated with Claude Code (Opus 5.5)** under our direction | Set the method (LOLA terrain horizons, SPICE geometry, DEM-clone uncertainty), the validation targets and pass criteria; checked every result against independent sources |
+| Web dashboard (`dashboard/`) | **Code and visual design generated with Claude (Fable 5.2)** | Reviewed each version, marked up screenshots with what to remove, enlarge or restructure, and chose the final layout |
+| Docs (this README, `docs/`) | **Drafted with Claude** | Edited and checked against the test outputs |
+| Research | Claude helped survey existing lunar illumination tools, published methods and mission records | Picked the challenge and the approach, and decided which claims to make |
+| Data and numbers | **No SI-generated data.** Every number comes from the engine running on NASA LOLA terrain and NAIF SPICE geometry, checked against JPL Horizons, Gläser et al., NASA PGDA maps and mission reports | Kept failed or ambiguous cases visible (IM-1, IM-2, the C2 long-term statistics) instead of loosening thresholds |
+| Images, video, audio | **No SI-generated images, video or audio.** The pole relief map is computed from NASA LOLA elevation data by `scripts/make_pole_hillshade.py` | Demo video recorded and narrated by the team |
+
+No NASA logos, flags or mission insignia are used or generated anywhere in the project.
 
 ## Credits
 

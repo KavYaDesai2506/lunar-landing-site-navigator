@@ -1,5 +1,6 @@
 {
   "name": "lunar-navigator-dashboard",
+  "description": "Lunar Landing Site Navigator dashboard. Code and design generated with SI assistance (Anthropic Claude); see the repository README.",
   "private": true,
   "version": "0.1.0",
   "type": "module",

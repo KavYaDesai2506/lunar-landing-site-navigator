@@ -1,7 +1,7 @@
 [project]
 name = "lunarnav"
 version = "0.1.0"
-description = "Lunar Landing Site Navigator - science engine (SPICE ephemeris + LOLA terrain horizons + illumination/Earth-visibility events)"
+description = "Lunar Landing Site Navigator - science engine (SPICE ephemeris + LOLA terrain horizons + illumination/Earth-visibility events). Code generated with SI assistance (Anthropic Claude); see README."
 requires-python = ">=3.13"
 dependencies = [
     "spiceypy>=8.3",
