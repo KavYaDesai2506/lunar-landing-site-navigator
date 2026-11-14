@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
+import Info from "./Info";
 import SourceLink from "./SourceLink";
 import { bodyAt, eventBlocker, featureLabels, mastKeys, presentFrac } from "../lib/astro";
 import type { Model } from "../lib/astro";
+import { setState } from "../lib/state";
 import { compass, csvRow, downloadText, fmtAz, fmtDateTime, fmtKm, fmtLat, fmtLon, fmtPct, fmtSpan, parseUtc } from "../lib/format";
 import type { Sensitivity, Site, Target } from "../lib/types";
 
@@ -14,26 +16,28 @@ export function LongTermCard({ site, mast, onMast }: { site: Site; mast: string;
   const farSide = lt0.earth.any_visible_pct === 0;
   return (
     <section className="card" aria-labelledby="lt-h">
-      <h2 id="lt-h">Long-term light, by mast height</h2>
+      <h2 id="lt-h">Raise the mast, gain light</h2>
       <p className="card-lede">
-        Hourly over one full 18.6-year lunar precession cycle ({lt0.start_utc.slice(0, 4)} to {lt0.stop_utc.slice(0, 4)}). Raising the solar panel or antenna lifts it over nearby terrain.
+        Lifting the solar panel or antenna clears nearby terrain. Averages over {lt0.start_utc.slice(0, 4)} to {lt0.stop_utc.slice(0, 4)}, one full 18.6-year cycle of the Moon's orbit.{onMast ? " Click a height to use it everywhere on this page." : ""}
       </p>
       <div className="table-scroll">
         <table className="data">
           <thead>
             <tr>
               <th scope="col">Mast</th>
-              <th scope="col" className="num" title="Mean visible fraction of the Sun's disc over time">
-                Average illumination
+              <th scope="col" className="num">
+                Average illumination <Info label="What average illumination means">The share of the Sun's disc in view, averaged over time. A half-hidden Sun counts as half.</Info>
               </th>
-              <th scope="col" className="num" title="Share of time any part of the Sun is visible">
-                Solar visibility
+              <th scope="col" className="num">
+                Solar visibility{" "}
+                <Info label="What solar visibility means">The share of time any part of the Sun shows. It runs about 5 points above average illumination at the same spot, so check which one a paper quotes.</Info>
               </th>
               <th scope="col" className="num">
                 Longest darkness
               </th>
-              <th scope="col" className="num" title="Share of time any part of Earth's disc is visible">
-                Earth visibility
+              <th scope="col" className="num">
+                Earth visibility{" "}
+                <Info label="What Earth visibility means">The share of time any part of Earth's disc shows. NASA's PGDA calls this slightly optimistic for a radio link to one ground station.</Info>
               </th>
               <th scope="col" className="num">
                 Sun and Earth
@@ -73,14 +77,15 @@ export function LongTermCard({ site, mast, onMast }: { site: Site; mast: string;
       </div>
       {unc && (
         <p className="note">
-          <span className="chip chip-quiet">How sure</span> Across NASA's 100 DEM error clones the 2 m average illumination is {unc.avg_p10_p50_p90[0].toFixed(1)}% to {unc.avg_p10_p50_p90[2].toFixed(1)}% (P10 to P90, median{" "}
-          {unc.avg_p10_p50_p90[1].toFixed(1)}%). That run uses a 5 m surface near the site, so its baseline ({unc.baseline_avg_pct.toFixed(1)}%) differs slightly from the 20 m value in the table.
+          <button type="button" className="chip chip-btn" onClick={() => setState({ tab: "sure" })}>
+            How sure
+          </button>{" "}
+          On NASA's 100 alternative terrains the 2 m average illumination stays between {unc.avg_p10_p50_p90[0].toFixed(1)}% and {unc.avg_p10_p50_p90[2].toFixed(1)}%.{" "}
+          <Info label="Why this differs slightly from the table">
+            8 in 10 terrains fall in this range (median {unc.avg_p10_p50_p90[1].toFixed(1)}%). That run uses a finer 5 m surface near the site, so its own baseline ({unc.baseline_avg_pct.toFixed(1)}%) sits slightly off the 20 m value in the table.
+          </Info>
         </p>
       )}
-      <p className="note">
-        Two metrics, often confused: <b>average illumination</b> is the mean visible fraction of the Sun's disc; <b>solar visibility</b> is the share of time any part of the Sun shows. They differ by about 5 points at the same spot. Earth
-        visibility counts any part of Earth's disc, which NASA's PGDA calls slightly optimistic for radio links.
-      </p>
     </section>
   );
 }
@@ -175,9 +180,15 @@ export function UncertaintyCard({ site, onJump }: { site: Site; onJump: (t: numb
   return (
     <section className="card" aria-labelledby="unc-h">
       <h2 id="unc-h">How sure are these times?</h2>
+      <p className="big-fact">
+        <b>
+          {tight} of {spreads.length}
+        </b>{" "}
+        event times move by less than 5 minutes when the terrain is wrong by as much as NASA says it could be.
+      </p>
       <p className="card-lede">
-        Each event was recomputed on <b>{u.n_clones} alternative terrains</b>: NASA's own statistical "clones" of the elevation model, which differ within its measurement error. {tight} of {spreads.length} event times move by less than 5 minutes
-        (median {fmtSpan(median)}). A few grazing events, where the Sun skims a ridge, are far less certain.
+        We recomputed every sunrise and sunset on <b>{u.n_clones} alternative terrains</b>: NASA's own versions of the elevation map, each shifted within its measurement error. The typical event moves by {fmtSpan(median)}. A few grazing
+        events, where the Sun skims a ridge, are far less certain; they are listed below.
       </p>
       <div className="hbar" role="img" aria-label={`Spread of event times across ${u.n_clones} terrain clones: ${BUCKETS.map(([l], i) => `${counts[i]} events ${l}`).join(", ")}.`}>
         {BUCKETS.map(([label], i) => (
@@ -197,7 +208,7 @@ export function UncertaintyCard({ site, onJump }: { site: Site; onJump: (t: numb
             <button className="linkish" onClick={() => onJump(parseUtc(e.utc))}>
               {fmtDateTime(parseUtc(e.utc))}
             </button>{" "}
-            {e.target === "sun" ? "Sun" : "Earth"} {e.kind.replace("_", " ")}: P10 to P90 spans <b>{fmtSpan(e.spread_p10_p90_h)}</b>
+            {e.target === "sun" ? "Sun" : "Earth"} {e.kind.replace("_", " ")}: 8 in 10 terrains agree within <b>{fmtSpan(e.spread_p10_p90_h)}</b>
             {presentFrac(e, u.n_clones) < 0.995 ? `; it happens in ${Math.round(presentFrac(e, u.n_clones) * 100)}% of terrain versions` : ""}
           </li>
         ))}
@@ -205,7 +216,7 @@ export function UncertaintyCard({ site, onJump }: { site: Site; onJump: (t: numb
       {fragile.length > 0 && (
         <>
           <h3>Fragile events: {fragile.length} that some terrain versions do not have at all</h3>
-          <p className="note">A brief flicker of sunlight past a ridge can vanish when the terrain is a metre different. Percentiles for these use only the clones where the event happens.</p>
+          <p className="note">A brief flicker of sunlight past a ridge can vanish when the terrain is a metre different.</p>
           <ul className="plain">
             {fragile.slice(0, 4).map((e) => (
               <li key={"f" + e.utc + e.kind}>
@@ -220,8 +231,33 @@ export function UncertaintyCard({ site, onJump }: { site: Site; onJump: (t: numb
         </>
       )}
       <p className="note">
-        <b>Scope.</b> {u.scope_note} Method: {u.method}
+        <b>What this does not cover.</b> Only the terrain within about {u.inner_km} km of the site was varied. An error in a distant ridge is not included, so treat the spreads as a lower bound.{" "}
+        <button className="linkish" onClick={() => setState({ view: "evidence" })}>
+          Method and citations are on the Evidence page
+        </button>
+        .
       </p>
+    </section>
+  );
+}
+
+/** "How sure" for the sites NASA publishes no alternative terrains for. */
+export function NoClonesCard({ custom }: { custom: boolean }) {
+  return (
+    <section className="card" aria-labelledby="unc-h">
+      <h2 id="unc-h">How sure are these times?</h2>
+      <p className="card-lede">
+        {custom ? "A live point is computed on one terrain model, so its times come without an error band." : "This site is computed on one terrain model, so its times come without an error band."} Where NASA publishes alternative terrains
+        (Shackleton rim and Connecting Ridge C1), most sunrise and sunset times move by less than 5 minutes; grazing events, where the Sun skims a ridge, can move by hours.
+      </p>
+      <div className="row-controls">
+        <button className="btn" onClick={() => setState({ site: "shackleton_rim_s", lat: null, lon: null, mast: "2", tab: "sure" }, { push: true })}>
+          See the error bands at Shackleton rim
+        </button>
+        <button className="btn" onClick={() => setState({ view: "evidence" })}>
+          Every check against published answers
+        </button>
+      </div>
     </section>
   );
 }
@@ -261,9 +297,9 @@ export function BlockerRadar({ model: m, t }: { model: Model; t: number }) {
   const [ex, ey] = P(earth.az, rMax + 8);
   return (
     <section className="card" aria-labelledby="radar-h">
-      <h2 id="radar-h">Where the horizon comes from</h2>
+      <h2 id="radar-h">Which terrain sets the horizon</h2>
       <p className="card-lede">
-        Seen from above, with the site at the centre: for each of the 720 directions, how far away is the terrain that sets the horizon? Half of the horizon is set by terrain within <b>{fmtKm(sorted[Math.floor(sorted.length / 2)])}</b>;{" "}
+        The site from above. In each direction, the shape reaches out to the terrain that blocks the view. Half of the horizon is set by terrain within <b>{fmtKm(sorted[Math.floor(sorted.length / 2)])}</b>;{" "}
         {local > 0.005 ? (
           <>
             <b>{Math.round(local * 100)}%</b> of it is the ground slope within 1 km.
@@ -398,8 +434,8 @@ export function EventsTable({ model: m, t, onJump }: { model: Model; t: number; 
                   Distance
                 </th>
                 {hasUnc && (
-                  <th scope="col" className="num" title="P10 to P90 spread across NASA's 100 DEM error clones">
-                    Time spread
+                  <th scope="col" className="num">
+                    How sure <Info label="What How sure means">How far the time moves across NASA's 100 alternative terrains (8 in 10 fall inside this span).</Info>
                   </th>
                 )}
               </tr>
@@ -422,7 +458,7 @@ export function EventsTable({ model: m, t, onJump }: { model: Model; t: number; 
                     <td className="num">{b ? fmtKm(b.dist_km) : ""}</td>
                     {hasUnc && (
                       <td className="num">
-                        {e.unc ? fmtSpan(e.unc.spread_p10_p90_h) : ""}
+                        {e.unc ? `± ${fmtSpan(e.unc.spread_p10_p90_h)}` : ""}
                         {e.unc && presentFrac(e.unc) < 0.995 ? <span className="hint">in {Math.round(presentFrac(e.unc) * 100)}% of terrain versions</span> : null}
                       </td>
                     )}
@@ -449,7 +485,7 @@ export function Provenance({ site }: { site: Site }) {
   const moved = site.requested.lat !== site.snapped.lat || site.requested.lon !== site.snapped.lon;
   return (
     <section className="card card-quiet" aria-labelledby="prov-h">
-      <h2 id="prov-h">Where these numbers come from</h2>
+      <h2 id="prov-h">Data behind this site</h2>
       <dl className="kv">
         <dt>Requested point</dt>
         <dd>

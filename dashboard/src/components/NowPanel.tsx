@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { bodyAt, eventBlocker, inIntervals, nextEvent, nextOpen, openUpAt, presentFrac } from "../lib/astro";
 import type { Ev, Model } from "../lib/astro";
-import { DAY, HOUR, fmtAz, fmtDateTime, fmtDeg, fmtDur, fmtKm, fmtSpan, fmtTime } from "../lib/format";
+import { DAY, HOUR, fmtAz, fmtDate, fmtDateTime, fmtDeg, fmtDur, fmtKm, fmtSpan, fmtTime } from "../lib/format";
 import { tr } from "../lib/i18n";
 import type { Lang } from "../lib/state";
 import type { SiteHeadline } from "../lib/types";
+import Info from "./Info";
 
 interface Props {
   model: Model;
@@ -13,6 +14,8 @@ interface Props {
   lang: Lang;
   head?: SiteHeadline | null;
   onJump: (t: number) => void;
+  /** open a drawer tab on the site view */
+  onTab?: (tab: string) => void;
 }
 
 export function whereText(m: Model, e: Ev): string {
@@ -22,20 +25,27 @@ export function whereText(m: Model, e: Ev): string {
   return `${what}, ${fmtKm(b.dist_km)} away, azimuth ${fmtAz(e.az_deg)}${b.approx && !b.local ? " (ridge taken from the 2 m horizon)" : ""}`;
 }
 
-function Band({ e }: { e: Ev }) {
+/** How far the event time moves across NASA's 100 alternative terrains: a chip that opens the How sure tab, with the working behind a "?". */
+function Sure({ e, onTab }: { e: Ev; onTab?: (tab: string) => void }) {
   const u = e.unc;
   if (!u) return null;
-  const narrow = u.spread_p10_p90_h < 0.1;
+  const fragile = presentFrac(u) < 0.995;
   return (
-    <div className="tile-band" title={`From ${u.n_clones_matched} of NASA's 100 DEM error clones (PGDA product 78)`}>
-      <span className="chip chip-quiet">P10–P90</span> {fmtTime(Date.parse(u.p10_utc), true)} to {fmtTime(Date.parse(u.p90_utc), true)} UTC ({fmtSpan(u.spread_p10_p90_h)} spread)
-      {narrow ? ": DEM error near the site barely matters" : ": a grazing event, sensitive to metre-scale terrain error"}
-      {presentFrac(u) < 0.995 ? `. A fragile event: it happens in ${Math.round(presentFrac(u) * 100)}% of terrain versions` : ""}
-    </div>
+    <span className="sure">
+      <button type="button" className="chip chip-btn" onClick={() => onTab?.("sure")} title="How sure is this time? Opens the How sure tab">
+        ± {fmtSpan(u.spread_p10_p90_h)}
+        {fragile ? ` · in ${Math.round(presentFrac(u) * 100)}% of terrains` : ""}
+      </button>
+      <Info label="How sure is this time?">
+        Recomputed on {u.n_clones_matched} of NASA's 100 alternative terrains (the elevation model shifted within its measurement error), 8 in 10 results fall between {fmtTime(Date.parse(u.p10_utc), true)} and{" "}
+        {fmtTime(Date.parse(u.p90_utc), true)} UTC. {u.spread_p10_p90_h < 0.1 ? "Terrain error near the site barely moves this event." : "A grazing event: metre-scale terrain error moves it."}
+        {fragile ? " In the other terrains it does not happen at all." : ""}
+      </Info>
+    </span>
   );
 }
 
-export default function NowPanel({ model: m, t, live, lang, head, onJump }: Props) {
+export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab }: Props) {
   const sun = bodyAt(m, "sun", t);
   const earth = bodyAt(m, "earth", t);
   const sunUp = sun.frac > 0;
@@ -61,14 +71,14 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump }: Prop
   if (sunEv) {
     if (sunUp && !openUp) {
       const back = nextOpen(m, "sun", "rise", t);
-      openLine = `On a flat 0° horizon the Sun is already down${back && exact ? ` until ${fmtDateTime(back.t, false)}` : ""}: this site sees it only because it stands above its surroundings.`;
+      openLine = `A flat-horizon tool says the Sun is already down${back && exact ? ` until ${fmtDateTime(back.t, false)}` : ""}: this site stands above its surroundings.`;
     } else if (!sunUp && openUp) {
       const gone = nextOpen(m, "sun", "set", t);
-      openLine = `On a flat 0° horizon the Sun is up right now${gone && exact ? `, until ${fmtDateTime(gone.t, false)}` : ""}. A tool that ignores terrain calls this spot lit.`;
+      openLine = `A flat-horizon tool calls this spot lit right now${gone && exact ? `, until ${fmtDateTime(gone.t, false)}` : ""}.`;
     } else if (openEv) {
       const gap = (openEv.t - sunEv.t) / HOUR;
-      openLine = `A tool without terrain (flat 0° horizon) says ${openWhen(openEv.t)}: ${fmtSpan(gap)} ${gap >= 0 ? "later" : "earlier"}.`;
-    } else openLine = `On a flat 0° horizon the Sun would not ${sunUp ? "set" : "rise"} before the data ends.`;
+      openLine = `A flat-horizon tool says ${openWhen(openEv.t)}: ${fmtSpan(gap)} ${gap >= 0 ? "too late" : "too early"}.`;
+    } else openLine = `On a flat horizon the Sun would not ${sunUp ? "set" : "rise"} before the data ends.`;
   }
 
   const secs = live && sunEv != null && sunEv.t - t < DAY;
@@ -105,8 +115,14 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump }: Prop
   else if (earth.frac < 0.25) earthState = tr(lang, "earthLimb", { p: Math.max(1, Math.round(earth.frac * 100)) });
   else earthState = tr(lang, "partialEarth", { p: Math.round(earth.frac * 100) });
 
+  const pin = (x: number, withYear = false) => (
+    <button className="linkish" onClick={() => onJump(x)} title="Move the time cursor to this moment">
+      {fmtDateTime(x, withYear)}
+    </button>
+  );
+
   return (
-    <section aria-label="Current conditions">
+    <section aria-label="Current conditions" className="now">
       <p className="headline" lang={lang}>
         {headline}
       </p>
@@ -114,42 +130,27 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump }: Prop
         {spoken}
       </div>
       <div className="tiles">
-        <div className="tile">
-          <div className="tile-label" lang={lang}>
-            {tr(lang, "sunElev")}
-          </div>
-          <div className={`tile-value ${sun.clearance < 0 ? "neg" : ""}`}>
-            {sun.clearance >= 0 ? "+" : "−"}
-            {Math.abs(sun.clearance).toFixed(2)}°
-          </div>
-          <div className="tile-state" lang={lang}>
-            <span className={`dot ${sunUp ? "dot-sun" : "dot-dark"}`} aria-hidden />
-            {sunState}
-          </div>
-          <div className="tile-sub">
-            Disc centre {fmtDeg(sun.el)} above the ideal sphere; terrain horizon {fmtDeg(sun.hor)} toward {fmtAz(sun.az)}. Sun disc is 0.53° wide.
-          </div>
-        </div>
-
-        <div className="tile tile-wide">
-          <div className="tile-label" lang={lang}>
-            {tr(lang, sunUp ? "sunsetIn" : "sunriseIn")}
-          </div>
+        <div className="tile tile-wide" data-hl="ridge">
+          <div className="tile-label">{sunEv ? (sunUp ? "Terrain sunset in" : "Terrain sunrise in") : sunUp ? "Sunlight" : "Darkness"}</div>
           {sunEv ? (
             <>
               <div className="tile-value">{fmtDur(sunEv.t - t, secs)}</div>
               <div className="tile-state">
-                <button className="linkish" onClick={() => onJump(sunEv.t)} title="Move the time cursor to this event">
-                  {fmtDateTime(sunEv.t)}
-                </button>
+                {pin(sunEv.t, true)} <Sure e={sunEv} onTab={onTab} />
               </div>
               <div className="tile-cause">
-                <span className="chip chip-why">Why here</span> {sunUp ? "Sets behind terrain" : "Rises over terrain"}: {whereText(m, sunEv)}.
+                <button type="button" className="chip chip-why chip-btn" onClick={() => onTab?.("horizon")} title="See which terrain sets the horizon in every direction">
+                  Why
+                </button>{" "}
+                {sunUp ? "Sets behind" : "Rises over"} {whereText(m, sunEv)}.
               </div>
-              <Band e={sunEv} />
-              {sunBack && <div className="tile-sub">Then dark for {fmtDur(sunBack.t - sunEv.t)}.</div>}
-              {sunGone && <div className="tile-sub">Then lit for {fmtDur(sunGone.t - sunEv.t)}.</div>}
               {openLine && <div className="tile-open">{openLine}</div>}
+              {(sunBack || sunGone) && (
+                <div className="tile-sub">
+                  {sunBack ? `Then dark for ${fmtDur(sunBack.t - sunEv.t)}.` : ""}
+                  {sunGone ? `Then lit for ${fmtDur(sunGone.t - sunEv.t)}.` : ""}
+                </div>
+              )}
             </>
           ) : (
             <div className="tile-state big" lang={lang}>
@@ -159,67 +160,81 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump }: Prop
         </div>
 
         <div className="tile">
-          <div className="tile-label" lang={lang}>
-            {tr(lang, "earthTitle")}
+          <div className="tile-label">{sun.clearance >= 0 ? "Sun clears the terrain by" : sunUp ? "Sun is slipping behind terrain" : "Sun is below the terrain by"}</div>
+          <div className={`tile-value ${sun.clearance < 0 ? "neg" : ""}`}>{sun.clearance < 0 && sunUp ? `${Math.max(1, Math.round(sun.frac * 100))}% showing` : `${Math.abs(sun.clearance).toFixed(2)}°`}</div>
+          <div className="tile-state" lang={lang}>
+            <span className={`dot ${sunUp ? "dot-sun" : "dot-dark"}`} aria-hidden />
+            {sunState}{" "}
+            <Info label="How the Sun's height is worked out">
+              The Sun's centre is {fmtDeg(sun.el)} above a perfectly smooth Moon. Toward {fmtAz(sun.az)} the terrain horizon sits at {fmtDeg(sun.hor)}, so the Sun's centre is {fmtDeg(Math.abs(sun.clearance))}{" "}
+              {sun.clearance >= 0 ? "above" : "below"} the terrain. The disc is 0.53° wide.
+            </Info>
           </div>
+        </div>
+
+        <div className="tile">
           {earthEv ? (
             <>
+              <div className="tile-label">{earthUp ? "Earthset in" : "Earthrise in"}</div>
               <div className="tile-value">{dur(earthEv)}</div>
               <div className="tile-state" lang={lang}>
                 <span className={`dot ${earthUp ? "dot-earth" : "dot-dark"}`} aria-hidden />
-                {tr(lang, earthUp ? "earthsetIn" : "earthriseIn")}:{" "}
-                <button className="linkish" onClick={() => onJump(earthEv.t)}>
-                  {fmtDateTime(earthEv.t, false)}
-                </button>
-              </div>
-              <div className="tile-sub" lang={lang}>
-                {earthState}. {earthUp ? "Sets behind terrain" : "Rises over terrain"}: {whereText(m, earthEv)}.
+                {pin(earthEv.t)}{" "}
+                <Info label="Earth and the radio link">
+                  {earthState}. {earthUp ? "It sets behind" : "It rises over"} {whereText(m, earthEv)}. Earth in view means a direct radio link is possible.
+                </Info>
               </div>
             </>
           ) : (
             <>
+              <div className="tile-label">Earth (radio link)</div>
               <div className="tile-state big" lang={lang}>
                 <span className={`dot ${earthUp ? "dot-earth" : "dot-dark"}`} aria-hidden />
                 {earthUp && !farSide ? tr(lang, "earthAlways") : earthState}
               </div>
-              {earthUp && <div className="tile-sub">Earth is {fmtDeg(earth.clearance, 1)} above the terrain toward {fmtAz(earth.az)}; it only wobbles with libration.</div>}
+              {earthUp && (
+                <div className="tile-sub">
+                  {fmtDeg(earth.clearance, 1)} above the terrain toward {fmtAz(earth.az)}.
+                </div>
+              )}
             </>
           )}
         </div>
 
         <div className="tile">
-          <div className="tile-label" lang={lang}>
-            {tr(lang, "bothTitle")}
-          </div>
           {bothNow ? (
             <>
-              <div className="tile-value">{bothNow[1] >= m.tEnd ? "to end of data" : fmtDur(bothNow[1] - t)}</div>
+              <div className="tile-label">Sun + Earth both visible for</div>
+              <div className="tile-value">{bothNow[1] >= m.tEnd ? "all the data" : fmtDur(bothNow[1] - t)}</div>
               <div className="tile-state" lang={lang}>
                 <span className="dot dot-both" aria-hidden />
-                {tr(lang, "bothEndsIn")}
+                {bothNow[1] >= m.tEnd ? `to ${fmtDate(m.tEnd)}` : <>until {pin(bothNow[1])}</>}{" "}
+                <Info label="Why this window matters">Power and a direct link at the same time: the usable operations window.</Info>
               </div>
-              <div className="tile-sub">Power and a direct link at the same time: the usable operations window.</div>
             </>
           ) : nextBoth ? (
             <>
-              <div className="tile-value">{fmtDur(nextBoth[0] - t)}</div>
+              <div className="tile-label">Sun + Earth both visible from</div>
+              <div className="tile-value">{fmtDate(nextBoth[0], false)}</div>
               <div className="tile-state" lang={lang}>
                 <span className="dot dot-dark" aria-hidden />
-                {tr(lang, "bothStartsIn")}
-              </div>
-              <div className="tile-sub">
-                Opens{" "}
-                <button className="linkish" onClick={() => onJump(nextBoth[0])}>
-                  {fmtDateTime(nextBoth[0], false)}
+                <button className="linkish" onClick={() => onJump(nextBoth[0])} title="Move the time cursor to this moment">
+                  {fmtTime(nextBoth[0])} UTC
                 </button>{" "}
-                and lasts {fmtDur(nextBoth[1] - nextBoth[0])}.
+                · lasts {fmtDur(nextBoth[1] - nextBoth[0])}{" "}
+                <Info label="Why this window matters">
+                  Power and a direct link at the same time: the usable operations window. It opens in {fmtDur(nextBoth[0] - t)}.
+                </Info>
               </div>
             </>
           ) : (
-            <div className="tile-state big" lang={lang}>
-              <span className="dot dot-dark" aria-hidden />
-              {farSide ? tr(lang, "farSide") : tr(lang, "noBoth")}
-            </div>
+            <>
+              <div className="tile-label">Sun + Earth together</div>
+              <div className="tile-state big" lang={lang}>
+                <span className="dot dot-dark" aria-hidden />
+                {farSide ? tr(lang, "farSide") : tr(lang, "noBoth")}
+              </div>
+            </>
           )}
         </div>
       </div>

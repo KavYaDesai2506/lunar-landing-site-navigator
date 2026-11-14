@@ -1,4 +1,4 @@
-/* Light, projector-friendly theme by default; dark is a toggle.
+/* Dark by default since 14 Nov (index.html sets data-theme before first paint); light is the projector toggle.
    State colours follow Okabe-Ito (colour-blind safe): Sun amber, Earth blue,
    both green, alert vermillion, shadow grey. Colour is never the only cue. */
 :root {
@@ -378,10 +378,6 @@ ul.plain.spaced li { margin-bottom: 8px; max-width: 90ch; }
 .map-pick { stroke: var(--alert); stroke-width: 2.5; }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1100px) {
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .tile-wide { grid-column: 1 / -1; grid-row: 1; }
-}
 @media (max-width: 860px) {
   .grid-2, .mission-grid, .cmp-grid { grid-template-columns: 1fr; }
   .tiles-3 { grid-template-columns: 1fr; }
@@ -393,7 +389,6 @@ ul.plain.spaced li { margin-bottom: 8px; max-width: 90ch; }
   .brand span { display: none; }
   .nav a { padding: 6px 9px; }
   .card { padding: 13px 14px; }
-  .tiles { grid-template-columns: 1fr; }
   .form { grid-template-columns: 1fr; }
   .select-big { min-width: 0; width: 100%; }
   .site-pick:first-child { width: 100%; }
@@ -471,3 +466,105 @@ ul.plain.spaced li { margin-bottom: 8px; max-width: 90ch; }
 @media print {
   .replay-bar .btn, .replay-bar .seg, .replay-jumps { display: none !important; }
 }
+
+/* ================= redesign pass 3 (14 Nov): a tool first, a showcase second ================= */
+
+/* ---- header: trust badges, Start here strip ---- */
+.brand { align-items: center; flex-wrap: wrap; gap: 4px 12px; }
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge { font-size: 0.74rem; font-weight: 650; padding: 1px 9px; border-radius: 99px; border: 1px solid var(--both); color: var(--ink-2); text-decoration: none; white-space: nowrap; }
+.badge:hover { background: var(--ok-bg); color: var(--ink); }
+.guide { background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.guide-in { max-width: 1320px; margin: 0 auto; padding: 8px 20px; display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; }
+.guide-title { white-space: nowrap; }
+.guide-jobs { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 0; min-width: 0; }
+.guide-job { display: inline-block; padding: 4px 12px; border-radius: 99px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); text-decoration: none; font-weight: 550; white-space: nowrap; }
+.guide-job::after { content: " →"; color: var(--sun); font-weight: 700; }
+.guide-job:hover { border-color: var(--sun); }
+.guide-close { border: 0; background: none; color: var(--muted); cursor: pointer; padding: 4px 6px; white-space: nowrap; }
+.guide-close:hover { color: var(--ink); }
+
+/* ---- the pulse a Start here job puts on the control to use ---- */
+@keyframes hl-ring { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--sun-fill) 40%, transparent); } }
+.hl-pulse { position: relative; outline: 3px solid var(--sun-fill); outline-offset: 3px; border-radius: var(--radius); animation: hl-ring 1.25s ease-in-out 4; }
+.hl-pulse[data-tip]::after {
+  content: attr(data-tip); position: absolute; left: 10px; top: -15px; z-index: 6; background: var(--sun-fill); color: #1b1400; font-size: 0.8rem; font-weight: 700;
+  padding: 2px 10px; border-radius: 99px; white-space: nowrap; pointer-events: none; text-transform: none; letter-spacing: 0;
+}
+
+/* ---- "?" popovers: the working behind a number ---- */
+.info { display: inline-block; }
+.info-btn { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 700; line-height: 1; padding: 0; cursor: pointer; vertical-align: 1px; }
+.info-btn:hover, .info-btn[aria-expanded="true"] { color: var(--ink); border-color: var(--ink); }
+.info-pop {
+  position: fixed; z-index: 40; width: min(300px, calc(100vw - 24px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 8px; padding: 9px 12px;
+  font-size: 0.84rem; font-weight: 400; line-height: 1.45; text-transform: none; letter-spacing: 0; white-space: normal; text-align: left; box-shadow: 0 8px 24px rgb(0 0 0 / 0.28);
+}
+.chip-btn { cursor: pointer; background: var(--surface); }
+.chip-btn:hover { border-color: var(--ink); color: var(--ink); }
+.chip-why.chip-btn { background: var(--ink); color: var(--surface); }
+.sure { white-space: nowrap; }
+
+/* ---- site bar: where, how high, when ---- */
+.site-bar { align-items: flex-end; }
+.picker { min-width: 0; }
+.picker-box { position: relative; }
+.picker-box .input { width: min(400px, 100%); padding-right: 34px; text-overflow: ellipsis; }
+.picker-caret { position: absolute; right: 1px; top: 1px; bottom: 1px; width: 32px; border: 0; background: none; cursor: pointer; color: var(--muted); }
+.picker-list {
+  position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; width: min(460px, calc(100vw - 32px)); max-height: min(62vh, 480px); overflow-y: auto; margin: 0; padding: 4px; list-style: none;
+  background: var(--surface); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: 0 12px 32px rgb(0 0 0 / 0.3);
+}
+.picker-group { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 650; padding: 8px 10px 3px; }
+.picker-opt { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+.picker-opt[aria-selected="true"] { background: var(--info-bg); }
+.picker-opt.current > span:first-child { font-weight: 700; }
+.picker-opt.custom { border: 1px solid var(--both); font-weight: 650; }
+.picker-hint { color: var(--muted); font-size: 0.8rem; font-weight: 400; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.picker-empty { padding: 8px 10px; color: var(--muted); font-size: 0.86rem; }
+.when-row { display: flex; gap: 6px; border-radius: 8px; }
+.meta-link { font-size: 0.84rem; white-space: nowrap; }
+
+/* ---- first screen: the answer on the left, the sky and its scrubber on the right ---- */
+.cockpit { display: grid; grid-template-columns: minmax(300px, 350px) minmax(0, 1fr); gap: 12px 16px; align-items: start; }
+.cockpit .now { display: contents; }
+.cockpit .headline { grid-column: 1 / -1; margin: 0; max-width: none; font-size: clamp(1.1rem, 1.5vw, 1.38rem); }
+.cockpit .tiles { grid-template-columns: 1fr; gap: 10px; min-width: 0; }
+.cockpit .tile { padding: 10px 14px; }
+.cockpit .tile-value { font-size: 1.65rem; margin: 1px 0 2px; }
+.cockpit .tile-wide .tile-value { font-size: 2.15rem; }
+.cockpit .tile-state.big { font-size: 1rem; margin-top: 4px; }
+.cockpit .tile-cause { font-size: 0.92rem; }
+/* the sky card is one column: sky, then its scrubber and lanes, then the legends */
+.sky { padding: 12px 14px 10px; display: flex; flex-direction: column; }
+.sky > .pano { display: contents; }
+.sky .scrub-controls, .sky > .timeline { order: 1; }
+.sky .pano > .pano-legend, .sky .pano > .note, .sky .pano > p { order: 2; }
+.sky > .explain { order: 3; }
+.sky .pano-controls { margin-top: 0; }
+.scrub-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 10px 0 6px; border-radius: 8px; }
+.scrub-right { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 1180px) {
+  .cockpit { grid-template-columns: minmax(0, 1fr); }
+  .cockpit .tiles { grid-template-columns: 1.6fr 1fr 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .cockpit .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .cockpit .tile-wide { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .cockpit .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cockpit .tile:last-child { grid-column: 1 / -1; }
+  .scrub-right { margin-left: 0; }
+  .guide-in { padding: 8px 16px; }
+  .guide-jobs { flex-wrap: nowrap; overflow-x: auto; flex-basis: 100%; order: 3; padding-bottom: 2px; scrollbar-width: none; }
+  .guide-close { margin-left: auto; }
+  .badges { display: none; }
+}
+
+/* ---- everything else about the site: one tabbed drawer ---- */
+.drawer { min-width: 0; scroll-margin-top: 64px; }
+.tabs { display: flex; gap: 2px; overflow-x: auto; overflow-y: hidden; border-bottom: 2px solid var(--line-strong); margin-bottom: 14px; scrollbar-width: thin; }
+.tabs button { border: 0; background: none; padding: 9px 15px; cursor: pointer; font-weight: 600; color: var(--ink-2); white-space: nowrap; border-bottom: 3px solid transparent; border-radius: 8px 8px 0 0; }
+.tabs button:hover { background: var(--surface); }
+.tabs button[aria-selected="true"] { color: var(--ink); background: var(--surface); border-bottom-color: var(--sun-fill); }

@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "sync-data": "node scripts/sync-data.mjs",
+    "sync-data": "node scripts/sync-data.mjs && node scripts/gen-upcoming.mjs",
+    "gen-upcoming": "node scripts/gen-upcoming.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4173",

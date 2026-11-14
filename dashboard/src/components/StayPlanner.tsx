@@ -60,10 +60,8 @@ export default function StayPlanner({ model: m, t, stay, slip, onStay, onSlip, o
 
   return (
     <section className="card" aria-labelledby="plan-h">
-      <h2 id="plan-h">Plan a stay, then slip the schedule</h2>
-      <p className="card-lede">
-        The stay starts at the time cursor ({fmtDateTime(t, false)}). Lighting at the poles repeats on a 29.5-day cycle that drifts 2 to 3 weeks per year, so a late launch lands in a different light.
-      </p>
+      <h2 id="plan-h">Land on {fmtDateTime(t, false)}: what light do you get?</h2>
+      <p className="card-lede">The stay starts at the time cursor. Pick a stay length, then slip the schedule to see what a late launch costs.</p>
       <div className="row-controls">
         <label className="ctl-label">Stay</label>
         <div className="seg" role="group" aria-label="Stay length">
@@ -135,8 +133,10 @@ export default function StayPlanner({ model: m, t, stay, slip, onStay, onSlip, o
       {base.clipped && <p className="note">The stay runs past the end of the precomputed window ({fmtDate(m.tEnd)}); numbers cover the part inside it.</p>}
       {slipOut && <p className="note">A slip of {slip} days from this date lands outside the precomputed window (ends {fmtDate(m.tEnd)}). Pick an earlier landing date to compare a one-year slip.</p>}
 
-      <h3>Every possible landing date</h3>
-      <SlipChart model={m} t={t} slipT={slipped ? slipT : null} stay={stay} curve={curve} onJump={onJump} />
+      <h3>Launch window finder: light for every landing date</h3>
+      <div data-hl="window">
+        <SlipChart model={m} t={t} slipT={slipped ? slipT : null} stay={stay} curve={curve} onJump={onJump} />
+      </div>
       {best && best.t - t > DAY && best.v - curve.sun[Math.max(0, curve.t.findIndex((x) => x >= t))] > 2 && (
         <p className="note">
           Best start in the next 60 days: <button className="linkish" onClick={() => onJump(best.t)}>{fmtDateTime(best.t, false)}</button> ({best.v.toFixed(0)}% average illumination over the stay).
@@ -239,7 +239,7 @@ function SlipChart({ model: m, t, slipT, stay, curve, onJump }: { model: Model; 
       )}
       <div className="pano-legend">
         <span>
-          <i className="sw sw-line sun" /> average illumination during the stay (mean visible fraction of the Sun's disc)
+          <i className="sw sw-line sun" /> average illumination during the stay
         </span>
         {hasEarth && (
           <span>
