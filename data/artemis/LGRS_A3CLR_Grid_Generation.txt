@@ -1,0 +1,222 @@
+#!/bin/bash
+# =====================================================================
+# This program is designed to create lunar Grid Reference System (LGRS)
+# navigational grids for the Aretmis III Candidate Landing Regions 
+# (A3CLR).
+
+# LGRS is a  grid system for lunar navigation based on a 25km globalized
+# grid. It is smillar in design and use to the Military Grid Reference 
+# System (MGRS). 
+
+# To meet NASA requerments to have a highly condesed coorodnate 
+# strucute to limited the cognitive impact to the Artemis Astronaughts,
+# LGRS coodoante are condesed to 6-charicters using a 1km grid imposed 
+# within the LGRS 25km grid, labled alphabetically then and truncated 
+# to a 10m percision.
+
+# The following god utalized the LGRS_Grid_Generation_mk6.py and
+# LGRS_Coordinate_Conversion_mk6.py to generate the grids for the A3CLR
+# and the landing regions of the Apollo Missions.
+
+# =====================================================================
+# Generate Landing site grids
+
+# collect landing site names
+LR=( 'Amundsen_Rim' 'Nobile_Rim_2' 'Haworth' 'Faustini_Rim_A' 
+     'de_Gerlache_Rim_2' 'Connecting_Ridge_Extension' 
+     'Connecting_Ridge' 'Nobile_Rim_1' 'Peak_Near_Shackleton' 
+     'de_Gerlache_Rim' 'Leibnitz_Beta_Plateau' 'Malapert_Massif' 
+     'de_Gerlache-Kocher_Massif' 'Apollo_11' 'Apollo_12' 'Apollo_14' 
+     'Apollo_15' 'Apollo_16' 'Apollo_17' )
+       
+# list of lat lon coordonates for the landing sites
+
+LR_ulX=( '65.09523119'
+'54.46232221'
+'-26.65196166' 
+'79.50852299'
+'-60.57254360'
+'-84.24543467'
+'-101.88865804'
+'31.66075110'
+'118.61045967'
+'-62.92791976'
+'27.28798795'
+'-4.76364169'
+'-110.48477552'
+'23.46991'
+'-23.43378'
+'-17.47803'
+'3.56152'
+'15.46215'
+'30.462' )
+
+LR_ulY=( '-84.40517285'
+'-84.04794193'
+'-86.11239815'
+'-88.18906723'
+'-87.78528838'
+'-88.71734521'
+'-89.35969194'
+'-85.35325142'
+'-89.17359087'
+'-88.33351026'
+'-85.32705340'
+'-85.63394425'
+'-85.65790523'
+'0.67824'
+'-3.00629'
+'-3.63049'
+'26.1377'
+'-8.84749'
+'20.439')
+
+
+LR_lrX=( '73.51245734'
+'63.02472352'
+'-16.99082329'
+'97.69605172'
+'-71.34211153'
+'-130.72721923'
+'-171.46923439'
+'43.22853026'
+'126.38435182'
+'-76.42956561'
+'36.36658017'
+'5.14788482'
+'-122.58935728'
+ '23.49843'
+ '-23.41718'
+ '-17.42761'
+ '3.6817'
+ '15.53130'
+ '30.982' )
+
+
+
+
+LR_lrY=( '-84.02121673'
+'-83.82634302'
+'-87.39353361'
+'-87.53783384'
+'-88.65998570'
+'-89.18625468'
+'-89.33307106'
+'-85.47632419'
+'-88.44348361'
+'-89.01619925'
+'-85.49736561'
+'-86.32588928'
+'-85.95455847'
+'0.66413'
+'-3.02081'
+'-3.6466'
+'25.97552'
+'-9.11918'
+'20.029' )
+
+# ---------------------------------------------------------------------
+# loop through all landing sites
+for (( i=0; i<${#LR[@]}; i++)); do
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# format output name
+    dir_o="${LR[$i]}"
+    f_o="${LR[$i]}_grid.shp"
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# create output directory
+    mkdir -p ${dir_o}
+    touch ${dir_o}
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# call grid generation program and create landing site grids
+    if echo "${LR[$i]}" | grep -q "Apollo"; then
+    
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# process equitoral grids in LTM portion
+
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+# 1km grid
+        echo Writing  1km grid to shape file for "${LR[$i]}"
+        python3 ./LGRS_Grid_Generation_mk6.py \
+                            LatLon LGRS_ACC 1km \
+        "${LR_ulX[$i]}" "${LR_ulY[$i]}" "${LR_lrX[$i]}" "${LR_lrY[$i]}"
+
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+# 100m grid
+        echo Writing 100m grid to shape file for "${LR[$i]}"
+        python3 ./LGRS_Grid_Generation_mk6.py\
+                             LatLon LGRS_ACC 100m \
+        "${LR_ulX[$i]}" "${LR_ulY[$i]}" "${LR_lrX[$i]}" "${LR_lrY[$i]}"
+
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+# 10m grid
+        echo Writing  10m grid to shape file for "${LR[$i]}"
+        python3 ./LGRS_Grid_Generation_mk6.py \
+                            LatLon LGRS_ACC 10m \
+        "${LR_ulX[$i]}" "${LR_ulY[$i]}" "${LR_lrX[$i]}" "${LR_lrY[$i]}"
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# move files and rename to final values
+    mv LGRS_ACC_1km_*_Grid/* ./"${dir_o}"/.
+    mv LGRS_ACC_100m_*_Grid/* ./"${dir_o}"/.
+    mv LGRS_ACC_10m_*_Grid/* ./"${dir_o}"/.
+
+    rmdir LGRS_ACC_1km_*_Grid/
+    rmdir LGRS_ACC_100m_*_Grid/
+    rmdir LGRS_ACC_10m_*_Grid/
+    
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Process polar grids in LPS portion
+    else
+        
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+# 1km grid
+        echo Writing  1km grid to shape file for "${LR[$i]}"
+        python3 ./LGRS_Grid_Generation_mk6.py \
+                            PolarLatLon PolarLGRS_ACC 1km \
+        "${LR_ulX[$i]}" "${LR_ulY[$i]}" "${LR_lrX[$i]}" "${LR_lrY[$i]}"
+
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+# 100m grid
+        echo Writing 100m grid to shape file for "${LR[$i]}"
+        python3 ./LGRS_Grid_Generation_mk6.py\
+                             PolarLatLon PolarLGRS_ACC 100m \
+        "${LR_ulX[$i]}" "${LR_ulY[$i]}" "${LR_lrX[$i]}" "${LR_lrY[$i]}"
+
+#  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - 
+# # 10m grid
+        echo Writing  10m grid to shape file for "${LR[$i]}"
+        python3 ./LGRS_Grid_Generation_mk6.py \
+                            PolarLatLon PolarLGRS_ACC 10m \
+        "${LR_ulX[$i]}" "${LR_ulY[$i]}" "${LR_lrX[$i]}" "${LR_lrY[$i]}"
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# move files and rename to final values
+    mv PolarLGRS_ACC_1km_*_Grid/* ./"${dir_o}"/.
+    mv PolarLGRS_ACC_100m_*_Grid/* ./"${dir_o}"/.
+    mv PolarLGRS_ACC_10m_*_Grid/* ./"${dir_o}"/.
+
+    rmdir PolarLGRS_ACC_1km_*_Grid/
+    rmdir PolarLGRS_ACC_100m_*_Grid/
+    rmdir PolarLGRS_ACC_10m_*_Grid/
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# move data to final dir
+    # mv ${dir_o} ../Data_Release2_ACC/.
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# end grid generation
+    fi
+
+# ---------------------------------------------------------------------
+# end loop
+done
+
+# =====================================================================
+# terminate program
+
+exit
+
+

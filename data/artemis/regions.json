@@ -1,0 +1,254 @@
+{
+ "Malapert_Massif": {
+  "nasa_name": "Malapert Massif",
+  "lgrs_name": "Malapert_Massif",
+  "note": null,
+  "box_ul_lonlat": [
+   -4.76364169,
+   -85.63394425
+  ],
+  "box_lr_lonlat": [
+   5.14788482,
+   -86.32588928
+  ],
+  "box_km": 21.0,
+  "box_centre": {
+   "lat": -85.99478,
+   "lon": 359.76422,
+   "avg_pct": 26.27,
+   "slope_deg": 4.6
+  },
+  "best": {
+   "lat": -85.993076,
+   "lon": 1.843355,
+   "ground_m": 5152.05,
+   "avg_pct": 66.5,
+   "vis_pct": 69.3,
+   "slope_deg": 3.3
+  },
+  "search": {
+   "coarse_best_pct": 61.21,
+   "refined_best_pct": 64.29,
+   "top_k": 3,
+   "mast_m": 2.0,
+   "max_slope_deg": 8.0,
+   "period": [
+    "2017-01-01T00:00:00",
+    "2035-08-08T00:00:00",
+    3600.0
+   ],
+   "dem_res_m": 20.0
+  },
+  "source": "https://doi.org/10.5066/P13FD9ZD"
+ },
+ "Haworth": {
+  "nasa_name": "Haworth",
+  "lgrs_name": "Haworth",
+  "note": null,
+  "box_ul_lonlat": [
+   -26.65196166,
+   -86.11239815
+  ],
+  "box_lr_lonlat": [
+   -16.99082329,
+   -87.39353361
+  ],
+  "box_km": 29.8,
+  "box_centre": {
+   "lat": -86.76394,
+   "lon": 337.22298,
+   "avg_pct": 12.52,
+   "slope_deg": 4.7
+  },
+  "best": {
+   "lat": -86.630846,
+   "lon": 329.276625,
+   "ground_m": 686.93,
+   "avg_pct": 46.72,
+   "vis_pct": 47.72,
+   "slope_deg": 6.9
+  },
+  "search": {
+   "coarse_best_pct": 45.28,
+   "refined_best_pct": 46.71,
+   "top_k": 3,
+   "mast_m": 2.0,
+   "max_slope_deg": 8.0,
+   "period": [
+    "2017-01-01T00:00:00",
+    "2035-08-08T00:00:00",
+    3600.0
+   ],
+   "dem_res_m": 20.0
+  },
+  "source": "https://doi.org/10.5066/P13FD9ZD"
+ },
+ "Nobile_Rim_1": {
+  "nasa_name": "Nobile Rim 1",
+  "lgrs_name": "Nobile_Rim_1",
+  "note": null,
+  "box_ul_lonlat": [
+   31.6607511,
+   -85.35325142
+  ],
+  "box_lr_lonlat": [
+   43.22853026,
+   -85.47632419
+  ],
+  "box_km": 20.0,
+  "box_centre": {
+   "lat": -85.4381,
+   "lon": 37.36667,
+   "avg_pct": 30.62,
+   "slope_deg": 15.3
+  },
+  "best": {
+   "lat": -85.026874,
+   "lon": 38.023511,
+   "ground_m": 6672.65,
+   "avg_pct": 67.52,
+   "vis_pct": 70.89,
+   "slope_deg": 2.8
+  },
+  "search": {
+   "coarse_best_pct": 50.56,
+   "refined_best_pct": 65.15,
+   "top_k": 3,
+   "mast_m": 2.0,
+   "max_slope_deg": 8.0,
+   "period": [
+    "2017-01-01T00:00:00",
+    "2035-08-08T00:00:00",
+    3600.0
+   ],
+   "dem_res_m": 20.0
+  },
+  "source": "https://doi.org/10.5066/P13FD9ZD"
+ },
+ "Nobile_Rim_2": {
+  "nasa_name": "Nobile Rim 2",
+  "lgrs_name": "Nobile_Rim_2",
+  "note": null,
+  "box_ul_lonlat": [
+   54.46232221,
+   -84.04794193
+  ],
+  "box_lr_lonlat": [
+   63.02472352,
+   -83.82634302
+  ],
+  "box_km": 20.0,
+  "box_centre": {
+   "lat": -83.95402,
+   "lon": 58.82205,
+   "avg_pct": 41.06,
+   "slope_deg": 4.3
+  },
+  "best": {
+   "lat": -83.604665,
+   "lon": 59.0737,
+   "ground_m": 1165.52,
+   "avg_pct": 52.19,
+   "vis_pct": 53.72,
+   "slope_deg": 4.8
+  },
+  "search": {
+   "coarse_best_pct": 51.93,
+   "refined_best_pct": 51.93,
+   "top_k": 3,
+   "mast_m": 2.0,
+   "max_slope_deg": 8.0,
+   "period": [
+    "2017-01-01T00:00:00",
+    "2035-08-08T00:00:00",
+    3600.0
+   ],
+   "dem_res_m": 20.0
+  },
+  "source": "https://doi.org/10.5066/P13FD9ZD"
+ },
+ "de_Gerlache_Rim_2": {
+  "nasa_name": "de Gerlache Rim 2",
+  "lgrs_name": "de_Gerlache_Rim_2",
+  "note": null,
+  "box_ul_lonlat": [
+   -60.5725436,
+   -87.78528838
+  ],
+  "box_lr_lonlat": [
+   -71.34211153,
+   -88.6599857
+  ],
+  "box_km": 20.0,
+  "box_centre": {
+   "lat": -88.22998,
+   "lon": 295.37156,
+   "avg_pct": 36.43,
+   "slope_deg": 11.5
+  },
+  "best": {
+   "lat": -88.551228,
+   "lon": 292.016943,
+   "ground_m": 1654.56,
+   "avg_pct": 59.91,
+   "vis_pct": 61.98,
+   "slope_deg": 7.8
+  },
+  "search": {
+   "coarse_best_pct": 42.46,
+   "refined_best_pct": 56.74,
+   "top_k": 3,
+   "mast_m": 2.0,
+   "max_slope_deg": 8.0,
+   "period": [
+    "2017-01-01T00:00:00",
+    "2035-08-08T00:00:00",
+    3600.0
+   ],
+   "dem_res_m": 20.0
+  },
+  "source": "https://doi.org/10.5066/P13FD9ZD"
+ },
+ "Leibnitz_Beta_Plateau": {
+  "nasa_name": "Mons Mouton Plateau",
+  "lgrs_name": "Leibnitz_Beta_Plateau",
+  "note": "LGRS box is named 'Leibnitz Beta Plateau' (Leibnitz Beta was renamed Mons Mouton); assumed to match NASA's 'Mons Mouton Plateau' region (unverified).",
+  "box_ul_lonlat": [
+   27.28798795,
+   -85.3270534
+  ],
+  "box_lr_lonlat": [
+   36.36658017,
+   -85.49736561
+  ],
+  "box_km": 16.0,
+  "box_centre": {
+   "lat": -85.42658,
+   "lon": 31.74276,
+   "avg_pct": 20.32,
+   "slope_deg": 8.9
+  },
+  "best": {
+   "lat": -85.477108,
+   "lon": 31.427784,
+   "ground_m": 6309.68,
+   "avg_pct": 71.9,
+   "vis_pct": 77.76,
+   "slope_deg": 3.7
+  },
+  "search": {
+   "coarse_best_pct": 51.17,
+   "refined_best_pct": 71.28,
+   "top_k": 3,
+   "mast_m": 2.0,
+   "max_slope_deg": 8.0,
+   "period": [
+    "2017-01-01T00:00:00",
+    "2035-08-08T00:00:00",
+    3600.0
+   ],
+   "dem_res_m": 20.0
+  },
+  "source": "https://doi.org/10.5066/P13FD9ZD"
+ }
+}

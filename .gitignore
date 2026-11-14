@@ -1,0 +1,17 @@
+.venv/
+data/kernels/
+data/dem/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/gazetteer/moon_names.zip
+out/*.log
+out/uncertainty_*.log
+dashboard/node_modules/
+dashboard/dist/
+data/dem/clones/
+deploy/
+
+# Vercel CLI link (local only)
+.vercel/
+dashboard/.vercel/

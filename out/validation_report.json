@@ -1,0 +1,919 @@
+{
+ "tests": {
+  "T1_ephemeris_vs_horizons": {
+   "shackleton_sun": {
+    "n_epochs": 337,
+    "max_sep_arcsec": 5.951451289214616e-05,
+    "median_sep_arcsec": 1.8763185787176496e-05,
+    "max_el_err_arcsec": 2.962877063694691e-05,
+    "criterion": "< 1 arcsec",
+    "pass": true
+   },
+   "shackleton_earth": {
+    "n_epochs": 337,
+    "max_sep_arcsec": 0.0018861587165638716,
+    "median_sep_arcsec": 0.001077647564783486,
+    "max_el_err_arcsec": 0.0001694860939593923,
+    "criterion": "< 1 arcsec",
+    "pass": true
+   },
+   "apollo11_sun": {
+    "n_epochs": 241,
+    "max_sep_arcsec": 0.00011785716048036644,
+    "median_sep_arcsec": 1.9993415472867878e-05,
+    "max_el_err_arcsec": 6.728748758177971e-05,
+    "criterion": "< 1 arcsec",
+    "pass": true
+   },
+   "apollo11_earth": {
+    "n_epochs": 241,
+    "max_sep_arcsec": 0.0018909597906129395,
+    "median_sep_arcsec": 0.0012525513300177878,
+    "max_el_err_arcsec": 0.0018318337566824994,
+    "criterion": "< 1 arcsec",
+    "pass": true
+   },
+   "change6_sun": {
+    "n_epochs": 241,
+    "max_sep_arcsec": 0.00012075616595205643,
+    "median_sep_arcsec": 2.0003022944603304e-05,
+    "max_el_err_arcsec": 0.00011727793776117323,
+    "criterion": "< 1 arcsec",
+    "pass": true
+   },
+   "change6_earth": {
+    "n_epochs": 241,
+    "max_sep_arcsec": 0.001880481275280549,
+    "median_sep_arcsec": 0.001250391326787564,
+    "max_el_err_arcsec": 0.0008064663177265174,
+    "criterion": "< 1 arcsec",
+    "pass": true
+   }
+  },
+  "T3_longterm_vs_glaser": {
+   "shackleton_rim_s": {
+    "lat": -89.7849,
+    "lon": 203.97,
+    "period": "2017-01-01..2037-01-01 hourly",
+    "mast_m": 0,
+    "ours_exact_pixel_20m": {
+     "avg_pct": 80.19,
+     "vis_pct": 84.74,
+     "max_shadow_h": 219.0
+    },
+    "ours_best_within_60m_20m": {
+     "avg_pct": 80.17,
+     "vis_pct": 84.72,
+     "max_shadow_h": 220.0,
+     "moved_m": 0.0,
+     "bearing_deg": 0.0,
+     "lat": -89.784598,
+     "lon": 203.935769
+    },
+    "ours_240m_grid": {
+     "avg_pct": 81.24,
+     "vis_pct": 85.49,
+     "max_shadow_h": 207.0
+    },
+    "ours_exact_pixel_range_100km": {
+     "avg_pct": 83.36,
+     "vis_pct": 87.52,
+     "max_shadow_h": 219.0
+    },
+    "glaser_20m": {
+     "avg_pct": 81.0,
+     "vis_pct": 85.5,
+     "max_shadow_h": 221
+    },
+    "mazarico_240m": {
+     "lat": -89.78,
+     "lon": 204.27,
+     "avg": 86.7,
+     "vis": 90.5
+    },
+    "delta_avg_pp": -0.83,
+    "delta_vis_pp": -0.78,
+    "delta_exact_avg_pp": -0.81,
+    "criterion": "best pixel within 60 m: |delta| <= 5.0 pp (avg illumination and visibility)",
+    "source": "https://ntrs.nasa.gov/api/citations/20170007365/downloads/20170007365.pdf",
+    "pass": true
+   },
+   "connecting_ridge_c1": {
+    "lat": -89.4505,
+    "lon": 222.84,
+    "period": "2017-01-01..2037-01-01 hourly",
+    "mast_m": 0,
+    "ours_exact_pixel_20m": {
+     "avg_pct": 69.28,
+     "vis_pct": 74.64,
+     "max_shadow_h": 337.0
+    },
+    "ours_best_within_60m_20m": {
+     "avg_pct": 73.93,
+     "vis_pct": 78.6,
+     "max_shadow_h": 231.0,
+     "moved_m": 28.3,
+     "bearing_deg": 2.1,
+     "lat": -89.449762,
+     "lon": 222.862727
+    },
+    "ours_240m_grid": {
+     "avg_pct": 81.42,
+     "vis_pct": 86.67,
+     "max_shadow_h": 157.0
+    },
+    "ours_exact_pixel_range_100km": {
+     "avg_pct": 69.54,
+     "vis_pct": 74.82,
+     "max_shadow_h": 337.0
+    },
+    "glaser_20m": {
+     "avg_pct": 76.0,
+     "vis_pct": 81.3,
+     "max_shadow_h": 268
+    },
+    "mazarico_240m": {
+     "lat": -89.45,
+     "lon": 222.69,
+     "avg": 89.0,
+     "vis": 92.7,
+     "shadow": 141.12
+    },
+    "delta_avg_pp": -2.07,
+    "delta_vis_pp": -2.7,
+    "delta_exact_avg_pp": -6.72,
+    "criterion": "best pixel within 60 m: |delta| <= 5.0 pp (avg illumination and visibility)",
+    "source": "https://ntrs.nasa.gov/api/citations/20170007365/downloads/20170007365.pdf",
+    "pass": true
+   },
+   "connecting_ridge_c2": {
+    "lat": -89.3157,
+    "lon": 245.94,
+    "period": "2017-01-01..2037-01-01 hourly",
+    "mast_m": 0,
+    "ours_exact_pixel_20m": {
+     "avg_pct": 69.02,
+     "vis_pct": 75.84,
+     "max_shadow_h": 317.0
+    },
+    "ours_best_within_60m_20m": {
+     "avg_pct": 70.17,
+     "vis_pct": 75.7,
+     "max_shadow_h": 244.0,
+     "moved_m": 44.7,
+     "bearing_deg": 357.5,
+     "lat": -89.314289,
+     "lon": 245.961971
+    },
+    "ours_240m_grid": {
+     "avg_pct": 73.94,
+     "vis_pct": 79.94,
+     "max_shadow_h": 166.0
+    },
+    "ours_exact_pixel_range_100km": {
+     "avg_pct": 73.79,
+     "vis_pct": 79.35,
+     "max_shadow_h": 317.0
+    },
+    "glaser_20m": {
+     "avg_pct": 75.6,
+     "vis_pct": 80.6,
+     "max_shadow_h": 166
+    },
+    "mazarico_240m": null,
+    "delta_avg_pp": -5.43,
+    "delta_vis_pp": -4.9,
+    "delta_exact_avg_pp": -6.58,
+    "criterion": "best pixel within 60 m: |delta| <= 5.0 pp (avg illumination and visibility)",
+    "source": "https://ntrs.nasa.gov/api/citations/20170007365/downloads/20170007365.pdf",
+    "pass": false
+   }
+  },
+  "T5_spatial_vs_pgda": {
+   "85S_060M": {
+    "n_points": 60,
+    "period": "2017-01-01..2035-08-08 hourly",
+    "grid": "60 m near / 240 m far, mast 0",
+    "sun_rmse_pp": 2.84,
+    "sun_bias_pp": -1.19,
+    "sun_mae_pp": 1.88,
+    "earth_rmse_pp": 0.84,
+    "earth_bias_pp": -0.1,
+    "peers": {
+     "NetRunnerXD_rmse_pp": 3.54,
+     "LunarHorizon_mean_abs_pp": 7.33
+    },
+    "criterion": "sun RMSE <= 5 pp",
+    "source": "https://pgda.gsfc.nasa.gov/products/69",
+    "points": [
+     {
+      "name": "shackleton_rim_s",
+      "lat": -89.78433,
+      "lon": 204.0959,
+      "sun_pgda_pct": 85.46,
+      "sun_ours_pct": 79.95,
+      "earth_pgda_pct": 56.68,
+      "earth_ours_pct": 56.73
+     },
+     {
+      "name": "connecting_ridge_c1",
+      "lat": -89.45114,
+      "lon": 222.8086,
+      "sun_pgda_pct": 86.42,
+      "sun_ours_pct": 83.89,
+      "earth_pgda_pct": 57.94,
+      "earth_ours_pct": 57.5
+     },
+     {
+      "name": "connecting_ridge_c2",
+      "lat": -89.31663,
+      "lon": 245.9954,
+      "sun_pgda_pct": 74.89,
+      "sun_ours_pct": 65.46,
+      "earth_pgda_pct": 58.65,
+      "earth_ours_pct": 58.75
+     },
+     {
+      "name": "malapert_region",
+      "lat": -85.99058,
+      "lon": 357.0734,
+      "sun_pgda_pct": 38.94,
+      "sun_ours_pct": 37.37,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_005km_035E",
+      "lat": -89.83506,
+      "lon": 34.7386,
+      "sun_pgda_pct": 38.16,
+      "sun_ours_pct": 35.08,
+      "earth_pgda_pct": 55.22,
+      "earth_ours_pct": 55.42
+     },
+     {
+      "name": "ring_005km_080E",
+      "lat": -89.83426,
+      "lon": 80.0316,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_005km_125E",
+      "lat": -89.83506,
+      "lon": 124.7386,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_005km_170E",
+      "lat": -89.83426,
+      "lon": 170.0316,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_005km_215E",
+      "lat": -89.83506,
+      "lon": 214.7386,
+      "sun_pgda_pct": 40.54,
+      "sun_ours_pct": 37.64,
+      "earth_pgda_pct": 56.24,
+      "earth_ours_pct": 56.43
+     },
+     {
+      "name": "ring_005km_260E",
+      "lat": -89.83426,
+      "lon": 260.0316,
+      "sun_pgda_pct": 24.32,
+      "sun_ours_pct": 21.29,
+      "earth_pgda_pct": 53.83,
+      "earth_ours_pct": 53.99
+     },
+     {
+      "name": "ring_005km_305E",
+      "lat": -89.83506,
+      "lon": 304.7386,
+      "sun_pgda_pct": 7.9,
+      "sun_ours_pct": 6.85,
+      "earth_pgda_pct": 51.64,
+      "earth_ours_pct": 51.86
+     },
+     {
+      "name": "ring_005km_350E",
+      "lat": -89.83426,
+      "lon": 350.0316,
+      "sun_pgda_pct": 18.62,
+      "sun_ours_pct": 16.83,
+      "earth_pgda_pct": 52.45,
+      "earth_ours_pct": 52.65
+     },
+     {
+      "name": "ring_015km_105E",
+      "lat": -89.5054,
+      "lon": 104.9536,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_015km_150E",
+      "lat": -89.50485,
+      "lon": 149.9001,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.42,
+      "earth_ours_pct": 0.4
+     },
+     {
+      "name": "ring_015km_195E",
+      "lat": -89.5054,
+      "lon": 194.9536,
+      "sun_pgda_pct": 22.76,
+      "sun_ours_pct": 30.47,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.16
+     },
+     {
+      "name": "ring_015km_240E",
+      "lat": -89.50485,
+      "lon": 239.9001,
+      "sun_pgda_pct": 9.9,
+      "sun_ours_pct": 8.68,
+      "earth_pgda_pct": 46.87,
+      "earth_ours_pct": 47.14
+     },
+     {
+      "name": "ring_015km_285E",
+      "lat": -89.5054,
+      "lon": 284.9536,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_015km_330E",
+      "lat": -89.50485,
+      "lon": 329.9001,
+      "sun_pgda_pct": 11.11,
+      "sun_ours_pct": 8.98,
+      "earth_pgda_pct": 50.86,
+      "earth_ours_pct": 51.02
+     },
+     {
+      "name": "ring_015km_015E",
+      "lat": -89.5054,
+      "lon": 14.9536,
+      "sun_pgda_pct": 31.92,
+      "sun_ours_pct": 27.9,
+      "earth_pgda_pct": 51.69,
+      "earth_ours_pct": 51.88
+     },
+     {
+      "name": "ring_015km_060E",
+      "lat": -89.50485,
+      "lon": 59.9001,
+      "sun_pgda_pct": 34.56,
+      "sun_ours_pct": 33.65,
+      "earth_pgda_pct": 53.87,
+      "earth_ours_pct": 54.07
+     },
+     {
+      "name": "ring_030km_210E",
+      "lat": -89.00936,
+      "lon": 210.0217,
+      "sun_pgda_pct": 32.61,
+      "sun_ours_pct": 30.39,
+      "earth_pgda_pct": 4.28,
+      "earth_ours_pct": 4.25
+     },
+     {
+      "name": "ring_030km_255E",
+      "lat": -89.01153,
+      "lon": 254.9762,
+      "sun_pgda_pct": 32.86,
+      "sun_ours_pct": 31.28,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_030km_300E",
+      "lat": -89.00936,
+      "lon": 300.0217,
+      "sun_pgda_pct": 17.26,
+      "sun_ours_pct": 15.07,
+      "earth_pgda_pct": 54.17,
+      "earth_ours_pct": 54.24
+     },
+     {
+      "name": "ring_030km_345E",
+      "lat": -89.01153,
+      "lon": 344.9762,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_030km_030E",
+      "lat": -89.00936,
+      "lon": 30.0217,
+      "sun_pgda_pct": 7.42,
+      "sun_ours_pct": 5.16,
+      "earth_pgda_pct": 43.93,
+      "earth_ours_pct": 44.02
+     },
+     {
+      "name": "ring_030km_075E",
+      "lat": -89.01153,
+      "lon": 74.9762,
+      "sun_pgda_pct": 7.25,
+      "sun_ours_pct": 5.35,
+      "earth_pgda_pct": 50.1,
+      "earth_ours_pct": 50.24
+     },
+     {
+      "name": "ring_030km_120E",
+      "lat": -89.00936,
+      "lon": 120.0217,
+      "sun_pgda_pct": 29.81,
+      "sun_ours_pct": 27.35,
+      "earth_pgda_pct": 59.21,
+      "earth_ours_pct": 59.31
+     },
+     {
+      "name": "ring_030km_165E",
+      "lat": -89.01153,
+      "lon": 164.9762,
+      "sun_pgda_pct": 16.69,
+      "sun_ours_pct": 13.41,
+      "earth_pgda_pct": 11.2,
+      "earth_ours_pct": 11.01
+     },
+     {
+      "name": "ring_050km_350E",
+      "lat": -88.35163,
+      "lon": 350.0119,
+      "sun_pgda_pct": 1.86,
+      "sun_ours_pct": 1.46,
+      "earth_pgda_pct": 43.37,
+      "earth_ours_pct": 43.55
+     },
+     {
+      "name": "ring_050km_035E",
+      "lat": -88.35083,
+      "lon": 35.0343,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 20.43,
+      "earth_ours_pct": 20.57
+     },
+     {
+      "name": "ring_050km_080E",
+      "lat": -88.35163,
+      "lon": 80.0119,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_050km_125E",
+      "lat": -88.35083,
+      "lon": 125.0343,
+      "sun_pgda_pct": 7.86,
+      "sun_ours_pct": 5.97,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_050km_170E",
+      "lat": -88.35163,
+      "lon": 170.0119,
+      "sun_pgda_pct": 17.47,
+      "sun_ours_pct": 14.07,
+      "earth_pgda_pct": 36.52,
+      "earth_ours_pct": 36.26
+     },
+     {
+      "name": "ring_050km_215E",
+      "lat": -88.35083,
+      "lon": 215.0343,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 1.14,
+      "earth_ours_pct": 1.14
+     },
+     {
+      "name": "ring_050km_260E",
+      "lat": -88.35163,
+      "lon": 260.0119,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 26.39,
+      "earth_ours_pct": 26.58
+     },
+     {
+      "name": "ring_050km_305E",
+      "lat": -88.35083,
+      "lon": 305.0343,
+      "sun_pgda_pct": 36.76,
+      "sun_ours_pct": 35.29,
+      "earth_pgda_pct": 53.6,
+      "earth_ours_pct": 53.8
+     },
+     {
+      "name": "ring_075km_165E",
+      "lat": -87.52688,
+      "lon": 165.0022,
+      "sun_pgda_pct": 22.78,
+      "sun_ours_pct": 22.88,
+      "earth_pgda_pct": 28.2,
+      "earth_ours_pct": 28.25
+     },
+     {
+      "name": "ring_075km_210E",
+      "lat": -87.5266,
+      "lon": 210.0206,
+      "sun_pgda_pct": 29.64,
+      "sun_ours_pct": 27.28,
+      "earth_pgda_pct": 30.2,
+      "earth_ours_pct": 30.22
+     },
+     {
+      "name": "ring_075km_255E",
+      "lat": -87.52688,
+      "lon": 255.0022,
+      "sun_pgda_pct": 25.11,
+      "sun_ours_pct": 24.82,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_075km_300E",
+      "lat": -87.5266,
+      "lon": 300.0206,
+      "sun_pgda_pct": 11.81,
+      "sun_ours_pct": 12.55,
+      "earth_pgda_pct": 36.57,
+      "earth_ours_pct": 36.77
+     },
+     {
+      "name": "ring_075km_345E",
+      "lat": -87.52688,
+      "lon": 345.0022,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 27.37,
+      "earth_ours_pct": 27.46
+     },
+     {
+      "name": "ring_075km_030E",
+      "lat": -87.5266,
+      "lon": 30.0206,
+      "sun_pgda_pct": 11.4,
+      "sun_ours_pct": 9.21,
+      "earth_pgda_pct": 54.66,
+      "earth_ours_pct": 54.03
+     },
+     {
+      "name": "ring_075km_075E",
+      "lat": -87.52688,
+      "lon": 75.0022,
+      "sun_pgda_pct": 5.95,
+      "sun_ours_pct": 3.56,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_075km_120E",
+      "lat": -87.5266,
+      "lon": 120.0206,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_100km_340E",
+      "lat": -86.70216,
+      "lon": 339.989,
+      "sun_pgda_pct": 25.08,
+      "sun_ours_pct": 23.01,
+      "earth_pgda_pct": 71.86,
+      "earth_ours_pct": 72.02
+     },
+     {
+      "name": "ring_100km_025E",
+      "lat": -86.70303,
+      "lon": 25.0044,
+      "sun_pgda_pct": 0.0,
+      "sun_ours_pct": 0.0,
+      "earth_pgda_pct": 31.81,
+      "earth_ours_pct": 31.9
+     },
+     {
+      "name": "ring_100km_070E",
+      "lat": -86.70216,
+      "lon": 69.989,
+      "sun_pgda_pct": 14.1,
+      "sun_ours_pct": 11.62,
+      "earth_pgda_pct": 44.17,
+      "earth_ours_pct": 44.25
+     },
+     {
+      "name": "ring_100km_115E",
+      "lat": -86.70303,
+      "lon": 115.0044,
+      "sun_pgda_pct": 39.35,
+      "sun_ours_pct": 38.66,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_100km_160E",
+      "lat": -86.70216,
+      "lon": 159.989,
+      "sun_pgda_pct": 41.79,
+      "sun_ours_pct": 39.68,
+      "earth_pgda_pct": 4.65,
+      "earth_ours_pct": 4.62
+     },
+     {
+      "name": "ring_100km_205E",
+      "lat": -86.70303,
+      "lon": 205.0044,
+      "sun_pgda_pct": 30.36,
+      "sun_ours_pct": 40.88,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_100km_250E",
+      "lat": -86.70216,
+      "lon": 249.989,
+      "sun_pgda_pct": 19.45,
+      "sun_ours_pct": 17.56,
+      "earth_pgda_pct": 40.31,
+      "earth_ours_pct": 40.4
+     },
+     {
+      "name": "ring_100km_295E",
+      "lat": -86.70303,
+      "lon": 295.0044,
+      "sun_pgda_pct": 0.22,
+      "sun_ours_pct": 0.7,
+      "earth_pgda_pct": 29.52,
+      "earth_ours_pct": 29.73
+     },
+     {
+      "name": "ring_130km_190E",
+      "lat": -85.71332,
+      "lon": 190.0034,
+      "sun_pgda_pct": 12.66,
+      "sun_ours_pct": 7.92,
+      "earth_pgda_pct": 16.97,
+      "earth_ours_pct": 17.02
+     },
+     {
+      "name": "ring_130km_235E",
+      "lat": -85.71294,
+      "lon": 234.9939,
+      "sun_pgda_pct": 27.48,
+      "sun_ours_pct": 25.78,
+      "earth_pgda_pct": 20.53,
+      "earth_ours_pct": 15.01
+     },
+     {
+      "name": "ring_130km_280E",
+      "lat": -85.71332,
+      "lon": 280.0034,
+      "sun_pgda_pct": 20.54,
+      "sun_ours_pct": 19.56,
+      "earth_pgda_pct": 16.15,
+      "earth_ours_pct": 16.56
+     },
+     {
+      "name": "ring_130km_325E",
+      "lat": -85.71294,
+      "lon": 324.9939,
+      "sun_pgda_pct": 15.44,
+      "sun_ours_pct": 13.64,
+      "earth_pgda_pct": 0.0,
+      "earth_ours_pct": 0.0
+     },
+     {
+      "name": "ring_130km_010E",
+      "lat": -85.71332,
+      "lon": 10.0034,
+      "sun_pgda_pct": 21.02,
+      "sun_ours_pct": 19.96,
+      "earth_pgda_pct": 73.84,
+      "earth_ours_pct": 74.08
+     },
+     {
+      "name": "ring_130km_055E",
+      "lat": -85.71294,
+      "lon": 54.9939,
+      "sun_pgda_pct": 26.1,
+      "sun_ours_pct": 23.55,
+      "earth_pgda_pct": 5.27,
+      "earth_ours_pct": 2.3
+     },
+     {
+      "name": "ring_130km_100E",
+      "lat": -85.71332,
+      "lon": 100.0034,
+      "sun_pgda_pct": 43.95,
+      "sun_ours_pct": 45.27,
+      "earth_pgda_pct": 49.98,
+      "earth_ours_pct": 50.13
+     },
+     {
+      "name": "ring_130km_145E",
+      "lat": -85.71294,
+      "lon": 144.9939,
+      "sun_pgda_pct": 46.03,
+      "sun_ours_pct": 45.48,
+      "earth_pgda_pct": 15.32,
+      "earth_ours_pct": 14.32
+     }
+    ],
+    "pass": true
+   }
+  },
+  "T2_terrain_vs_quickmap": {
+   "shackleton_rim_204E": {
+    "our_sun_last_light_utc": [
+     "2026-11-13T16:10:01Z"
+    ],
+    "quickmap_sunset_window_utc": [
+     "2026-11-11T06:00",
+     "2026-11-11T10:00"
+    ],
+    "sun_frac_at_2026-11-11T13:42": 1.0,
+    "sun_geom_el_at_2026-11-11T13:42": 1.7,
+    "horizon_el_at_sun_az": 0.93,
+    "earth_frac_at_2026-11-17T17:42": 0.845,
+    "earth_el_az": [
+     -0.127,
+     150.02
+    ],
+    "earth_events": [
+     "2026-11-16T15:22:45Z first_light",
+     "2026-11-18T00:44:13Z full_disc"
+    ],
+    "snapped": [
+     -89.7801779816417,
+     203.98867135486375
+    ],
+    "criterion": "our terrain sunset falls in QuickMap's 06-10 UTC window (informational; QuickMap has 4-h resolution and its own caveats)",
+    "pass": null,
+    "in_quickmap_window": false
+   }
+  },
+  "T8_physics": {
+   "sanity": {
+    "polar_sun_max_abs_el_deg": 1.805,
+    "change6_earth_max_upper_limb_el_deg": -32.54,
+    "apollo11_earth_min_lower_limb_el_deg": 57.01,
+    "criterion": "Sun |el| at 89.78S < 1.6 + 0.22 deg (pole bound 1.54 + site colatitude); far side never sees Earth; Apollo 11 always does",
+    "pass": true
+   }
+  },
+  "T6_mission_endings": {
+   "chandrayaan3": {
+    "landed_utc": "2023-08-23T12:33:00",
+    "reported_end_utc": "2023-09-04T02:30:00",
+    "end_reason": "Put to sleep by ISRO ahead of local sunset; did not wake",
+    "predicted_terrain_sunset_utc": "2023-09-04T07:11:35Z",
+    "sunset_blocker": "near Manzinus U crater",
+    "end_minus_predicted_sunset_h": -4.7,
+    "sun_frac_at_reported_end": 1.0,
+    "criterion": "|end - predicted sunset| <= 24.0 h",
+    "sources": [
+     "https://spacepolicyonline.com/news/india-says-good-night-to-chandrayaan-3/",
+     "https://en.wikipedia.org/wiki/Chandrayaan-3"
+    ],
+    "pass": true
+   },
+   "im1": {
+    "landed_utc": "2024-02-22T23:23:00",
+    "reported_end_utc": "2024-02-29T00:00:00",
+    "end_reason": "Tipped on landing; last contact near local sunset",
+    "predicted_terrain_sunset_utc": "2024-03-02T18:25:47Z",
+    "sunset_blocker": "near Malapert A crater",
+    "end_minus_predicted_sunset_h": -66.4,
+    "sun_frac_at_reported_end": 1.0,
+    "criterion": "|end - predicted sunset| <= 36.0 h",
+    "sources": [
+     "https://en.wikipedia.org/wiki/IM-1"
+    ],
+    "pass": false
+   },
+   "blue_ghost1": {
+    "landed_utc": "2025-03-02T08:34:00",
+    "reported_end_utc": "2025-03-16T23:25:00",
+    "end_reason": "Local sunset 16 Mar; batteries lasted ~5 h into the night",
+    "predicted_terrain_sunset_utc": "2025-03-16T18:50:18Z",
+    "sunset_blocker": "local ground slope right at the site",
+    "end_minus_predicted_sunset_h": 4.6,
+    "sun_frac_at_reported_end": 0.0,
+    "criterion": "|end - predicted sunset| <= 24.0 h",
+    "sources": [
+     "https://fireflyspace.com/missions/blue-ghost-mission-1/"
+    ],
+    "pass": true
+   },
+   "slim": {
+    "landed_utc": "2024-01-19T15:20:00",
+    "reported_end_utc": "2024-04-28T00:00:00",
+    "predicted_sunrises_utc": [
+     "2024-02-15T13:04:25Z",
+     "2024-03-16T03:13:31Z",
+     "2024-04-14T16:30:57Z",
+     "2024-05-14T04:48:47Z"
+    ],
+    "sun_frac_at_reported_end": 1.0,
+    "criterion": "informational: wake-ups should follow predicted local sunrises (JAXA wake dates to be sourced)",
+    "sources": [
+     "https://global.jaxa.jp/press/2024/08/20240826-1_e.html"
+    ],
+    "pass": null
+   }
+  },
+  "T7_negative_control": {
+   "im2": {
+    "landed_utc": "2025-03-06T17:28:00",
+    "reported_end_utc": "2025-03-07T06:15:00",
+    "end_reason": "Landed on its side in a cold crater; power ran out",
+    "sun_frac_at_reported_end": 1.0,
+    "predicted_next_terrain_sunset_utc": "2025-03-19T22:47:49Z",
+    "sunlight_hours_left_at_end": 304.5,
+    "verdict": "Light was not the limit: the site still had sunlight. The tool cannot model lander orientation.",
+    "criterion": "sun visible at end and > 24 h of sunlight left",
+    "sources": [
+     "https://spaceflightnow.com/2025/03/07/intuitive-machines-im-2-mission-ends-with-lander-on-its-side-on-the-moon/",
+     "https://www.lroc.asu.edu/images/1401"
+    ],
+    "pass": true
+   },
+   "im1": {
+    "landed_utc": "2024-02-22T23:23:00",
+    "reported_end_utc": "2024-02-29T00:00:00",
+    "end_reason": "Tipped on landing; power ended 'as the sun moved out of view of the one illuminated solar panel' (SpaceNews via Wikipedia), i.e. a panel-geometry limit, before terrain sunset",
+    "sun_frac_at_reported_end": 1.0,
+    "predicted_terrain_sunset_utc": "2024-03-02T18:25:47Z",
+    "sunset_blocker": "near Malapert A crater",
+    "terrain_sunlight_hours_left_at_end": 66.4,
+    "verdict": "Terrain sunlight remained; the end came from the tipped lander's single lit panel losing the low Sun. Last-contact date is 29 Feb or 1 Mar 2024 depending on source; either way it is > 1 day before terrain sunset.",
+    "criterion": "sun visible at reported end and > 24 h of terrain sunlight left",
+    "sources": [
+     "https://en.wikipedia.org/wiki/IM-1",
+     "https://spacenews.com/intuitive-machines-and-nasa-call-im-1-lunar-lander-a-success-as-mission-winds-down/"
+    ],
+    "pass": true
+   }
+  },
+  "T4_mast_height": {
+   "connecting_ridge_c1": {
+    "ours": {
+     "0m": {
+      "avg_pct": 73.94,
+      "vis_pct": 78.6,
+      "max_shadow_h": 231.0
+     },
+     "2m": {
+      "avg_pct": 85.62,
+      "vis_pct": 90.36,
+      "max_shadow_h": 133.0
+     },
+     "10m": {
+      "avg_pct": 92.47,
+      "vis_pct": 95.44,
+      "max_shadow_h": 78.0
+     }
+    },
+    "glaser_2018_C1-0_2m": {
+     "avg_pct": 88.0,
+     "vis_pct": 92.1
+    },
+    "glaser_2014": {
+     "2m_pct": 92.27,
+     "10m_pct": 95.65
+    },
+    "criterion": "illumination increases with mast height, with a clear (>3 pp) 0->2 m gain",
+    "pass": true
+   }
+  }
+ },
+ "generated_utc": "2026-11-13T12:48:22+00:00"
+}

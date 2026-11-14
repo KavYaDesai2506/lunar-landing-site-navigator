@@ -1,0 +1,33 @@
+[project]
+name = "lunarnav"
+version = "0.1.0"
+description = "Lunar Landing Site Navigator - science engine (SPICE ephemeris + LOLA terrain horizons + illumination/Earth-visibility events)"
+requires-python = ">=3.13"
+dependencies = [
+    "spiceypy>=8.3",
+    "numpy>=2.1",
+    "scipy>=1.14",
+    "numba>=0.61",
+    "rasterio>=1.4",
+    "pyproj>=3.7",
+    "requests>=2.32",
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "httpx>=0.27"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lunarnav"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "network: needs internet (DEM range reads, Horizons fetch)",
+    "slow: long-running (multi-year illumination statistics)",
+]

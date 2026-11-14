@@ -1,0 +1,22 @@
+# Render Blueprint for the engine API (custom coordinates for the dashboard).
+# Render dashboard -> New -> Blueprint -> pick this repo. Free plan: 512 MB RAM, 0.1 CPU,
+# sleeps after 15 min idle (first request after that takes ~1 min to wake).
+services:
+  - type: web
+    name: lunar-navigator-api
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    # editable install: the engine finds data/ relative to the source tree
+    buildCommand: pip install -e . && python scripts/fetch_runtime_data.py
+    startCommand: uvicorn lunarnav.api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.7
+      - key: LUNARNAV_CLIP_CACHE
+        value: "2"
+      - key: LUNARNAV_HORIZON_CACHE
+        value: "4"
