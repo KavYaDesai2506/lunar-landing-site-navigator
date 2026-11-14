@@ -1,0 +1,12 @@
+{
+  "extent_km": [
+    -360.0,
+    360.0,
+    -360.0,
+    360.0
+  ],
+  "px": 1200,
+  "projection": "south polar stereographic, R=1737.4 km; x right = 90 E, y up = 0 E",
+  "source": "NASA LOLA via PGDA (LDEM_60S_60MPP_ADJ.TIF#ovr4), 240 m/px input",
+  "light": "hillshade, Sun from upper left, 35 deg, 2x vertical exaggeration"
+}
