@@ -183,7 +183,7 @@ export default function App() {
           </Boundary>
         )}
       </main>
-      <footer className="footer">
+      {s.view !== "about" && <footer className="footer">
         Terrain: LOLA elevation models from NASA Goddard's PGDA (products 69, 78, 90) and SLDEM2015. Geometry: NAIF SPICE. Feature names: IAU Gazetteer of Planetary Nomenclature. All times UTC.
         {idx.data ? ` Site data computed ${fmtDate(parseUtc(idx.data.generated_utc))}.` : ""} Built for NASA Space Apps 2026; not an official NASA product.{" "}
         <a
@@ -195,7 +195,7 @@ export default function App() {
         >
           About us
         </a>
-      </footer>
+      </footer>}
     </>
   );
 }
