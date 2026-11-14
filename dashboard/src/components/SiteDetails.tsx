@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import Info from "./Info";
 import PoleLocator, { onRelief } from "./PoleLocator";
+import { proj, unproj } from "../lib/polar";
 import SourceLink from "./SourceLink";
 import { bodyAt, eventBlocker, featureLabels, mastKeys, presentFrac } from "../lib/astro";
 import type { Model } from "../lib/astro";
@@ -93,6 +94,28 @@ export function LongTermCard({ site, mast, onMast }: { site: Site; mast: string;
 
 // ---------- sensitivity: "move N metres" ----------
 
+/** Below this many points a pixel is not meaningfully better: NASA's 100 alternative terrains move
+ *  Shackleton's 2 m average by about 0.6 points, so smaller gains are inside the terrain error. */
+const SENS_TOL_PP = 0.5;
+
+/** Where to point the reader: the NEAREST pixel within SENS_TOL_PP of the best one, and only when
+ *  the site pixel itself is not already within that margin. Grid offsets map to the shared polar
+ *  frame as x = dc·res, y = −dr·res (checked against the engine's own best-pixel lat/lon). */
+function betterPixel(s: Sensitivity) {
+  const hi = Math.max(...s.cells.map((c) => c.avg_pct));
+  if (s.centre.avg_pct >= hi - SENS_TOL_PP) return null;
+  const d2 = (c: { dr: number; dc: number }) => c.dr * c.dr + c.dc * c.dc;
+  const c = s.cells.filter((x) => x.avg_pct >= hi - SENS_TOL_PP).sort((a, b) => d2(a) - d2(b) || b.avg_pct - a.avg_pct)[0];
+  const [x0, y0] = proj(s.centre.lat, s.centre.lon);
+  const [lat, lon] = unproj(x0 + (c.dc * s.res_m) / 1000, y0 - (c.dr * s.res_m) / 1000);
+  const r = Math.PI / 180;
+  const dl = (lon - s.centre.lon) * r;
+  const p1 = s.centre.lat * r;
+  const p2 = lat * r;
+  const bearing = Math.atan2(Math.sin(dl) * Math.cos(p2), Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl)) / r;
+  return { ...c, dist_m: Math.sqrt(d2(c)) * s.res_m, bearing_deg: (bearing + 360) % 360, gain_pp: c.avg_pct - s.centre.avg_pct };
+}
+
 export function SensitivityCard({ s }: { s: Sensitivity }) {
   const R = s.radius_px;
   const n = 2 * R + 1;
@@ -101,7 +124,9 @@ export function SensitivityCard({ s }: { s: Sensitivity }) {
   const lo = Math.min(...vals);
   const hi = Math.max(...vals);
   const at = new Map(s.cells.map((c) => [`${c.dr},${c.dc}`, c]));
-  const moved = s.best.dist_m > 0 && s.gain_pp > 0.005;
+  const best = betterPixel(s);
+  const moved = best != null;
+  const isTop = hi - s.centre.avg_pct < 0.005;
   return (
     <section className="card" aria-labelledby="sens-h">
       <h2 id="sens-h">A few metres matter</h2>
@@ -114,7 +139,7 @@ export function SensitivityCard({ s }: { s: Sensitivity }) {
             if (!c) return null;
             const f = hi > lo ? (c.avg_pct - lo) / (hi - lo) : 1;
             const isC = dr === 0 && dc === 0;
-            const isB = moved && dr === s.best.dr && dc === s.best.dc;
+            const isB = best != null && dr === best.dr && dc === best.dc;
             return (
               <g key={k}>
                 <title>{`${dr === 0 && dc === 0 ? "Site pixel" : `Offset ${dc * s.res_m} m across, ${-dr * s.res_m} m up the grid`}: average illumination ${c.avg_pct.toFixed(1)}%, solar visibility ${c.vis_pct.toFixed(1)}%`}</title>
@@ -131,14 +156,14 @@ export function SensitivityCard({ s }: { s: Sensitivity }) {
         <div className="fact-col">
           <div className="tile">
             <div className="tile-label">Best pixel nearby</div>
-            <div className="tile-value">{moved ? `+${s.gain_pp.toFixed(2)} pts` : "this one"}</div>
+            <div className="tile-value">{best ? `+${best.gain_pp.toFixed(1)} pts` : "this one"}</div>
             <div className="tile-state">
               {moved ? (
                 <>
-                  <i className="sw sw-ring best" /> {Math.round(s.best.dist_m)} m toward {fmtAz(s.best.bearing_deg)} → {s.best.avg_pct.toFixed(1)}%
+                  <i className="sw sw-ring best" /> {Math.round(best!.dist_m)} m toward {fmtAz(best!.bearing_deg)} → {best!.avg_pct.toFixed(1)}%
                 </>
               ) : (
-                <>already the best-lit pixel within {R * s.res_m} m</>
+                <>{isTop ? `already the best-lit pixel within ${R * s.res_m} m` : `no pixel within ${R * s.res_m} m is more than ${SENS_TOL_PP} pts better`}</>
               )}
             </div>
           </div>
