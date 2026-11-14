@@ -6,7 +6,7 @@ Built for NASA Space Apps 2026, challenge *Lunar Landing Site Navigator*, by tea
 
 - **Live dashboard:** https://lunar-navigator-omega.vercel.app
 - **Live engine API:** https://lunar-navigator-api.vercel.app (`/health`, `/horizon`, `/site`)
-- **Try first:** [Connecting Ridge C2, 14 Nov 2026](https://lunar-navigator-omega.vercel.app/#/site?site=connecting_ridge_c2&t=2026-11-14T07:30Z). The ridge near Henson crater hides the Sun at 08:26 UTC.
+- **Try first:** [Connecting Ridge C2, 14 Nov 2026](https://lunar-navigator-omega.vercel.app/#/site?site=connecting_ridge_c2&t=2026-11-14T07:30Z). The ridge near Henson crater hides the Sun at 08:26 UTC; press Play to watch it go.
 
 ## What it does
 

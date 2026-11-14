@@ -142,7 +142,7 @@ export default function NowPanel({ model: m, t, live, lang, head, onJump, onTab 
                 <button type="button" className="chip chip-why chip-btn" onClick={() => onTab?.("horizon")} title="See which terrain sets the horizon in every direction">
                   Why
                 </button>{" "}
-                {sunUp ? "Sets behind" : "Rises over"} {whereText(m, sunEv)}.
+                {sunUp ? "Sets behind terrain" : "Rises over terrain"} {whereText(m, sunEv)}.
               </div>
               {openLine && <div className="tile-open">{openLine}</div>}
               {(sunBack || sunGone) && (
