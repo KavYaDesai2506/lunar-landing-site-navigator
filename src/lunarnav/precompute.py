@@ -104,6 +104,15 @@ def _replay_step(start: str, stop: str) -> float:
     return REPLAY_STEP_S * max(1, math.ceil(span / REPLAY_STEP_S / REPLAY_MAX_N))
 
 
+def _clearance(h, utc: str) -> dict:
+    out = {}
+    for tgt in ("SUN", "EARTH"):
+        _, V = grid_vectors(utc, utc, 60.0, tgt)
+        g = azel_from_center(site_of(h), V, tgt)
+        out[tgt] = round(float(g["el"][0] - h.at(g["az"])[0]), 3)
+    return out
+
+
 def mission_replay(site: dict, h) -> dict | None:
     m = site.get("mission")
     if not m:
@@ -121,6 +130,7 @@ def mission_replay(site: dict, h) -> dict | None:
     et, V = grid_vectors(m["end_utc"], m["end_utc"], 60.0, "SUN")
     g = azel_from_center(site_of(h), V, "SUN")
     frac_end = float(disc_fraction(g["el"], h.at(g["az"]), g["ang_radius"])[0])
+    clear = {k: _clearance(h, m[k]) for k in ("landed_utc", "end_utc")}
     gap_h = None
     if first_sunset:
         t_sun = datetime.fromisoformat(first_sunset["utc"].rstrip("Z"))
@@ -133,6 +143,9 @@ def mission_replay(site: dict, h) -> dict | None:
         "sun_frac_at_end": round(frac_end, 3),
         "end_minus_sunset_h": gap_h,
         "sunrises_after_landing": [e["utc"] for e in sun_first if e["utc"] >= m["landed_utc"]],
+        # Sun / Earth centre height above the terrain horizon (deg) at landing and at the end
+        "sun_clearance_deg_at": {k[:-4]: v["SUN"] for k, v in clear.items()},
+        "earth_clearance_deg_at": {k[:-4]: v["EARTH"] for k, v in clear.items()},
         **replay_extras(m, h, start, stop),
     }
 
