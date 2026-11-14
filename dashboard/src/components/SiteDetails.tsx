@@ -80,7 +80,7 @@ export function LongTermCard({ site, mast, onMast }: { site: Site; mast: string;
           <button type="button" className="chip chip-btn" onClick={() => setState({ tab: "sure" })}>
             How sure
           </button>{" "}
-          On NASA's 100 alternative terrains the 2 m average illumination stays between {unc.avg_p10_p50_p90[0].toFixed(1)}% and {unc.avg_p10_p50_p90[2].toFixed(1)}%.{" "}
+          On NASA's 100 alternative terrains the 2 m average illumination stays between {unc.avg_p10_p50_p90[0].toFixed(1)}% and {unc.avg_p10_p50_p90[2].toFixed(1)}%.{" "}
           <Info label="Why this differs slightly from the table">
             8 in 10 terrains fall in this range (median {unc.avg_p10_p50_p90[1].toFixed(1)}%). That run uses a finer 5 m surface near the site, so its own baseline ({unc.baseline_avg_pct.toFixed(1)}%) sits slightly off the 20 m value in the table.
           </Info>

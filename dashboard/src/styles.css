@@ -599,3 +599,4 @@ ul.plain.spaced li { margin-bottom: 8px; max-width: 90ch; }
   .site-bar { gap: 8px 14px; }
   .when-row .input { max-width: 190px; }
 }
+[data-hl="window"] { margin-top: 12px; }
