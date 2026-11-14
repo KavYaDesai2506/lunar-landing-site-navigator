@@ -2,7 +2,7 @@
 
 **When does the light end at a lunar landing site, which ridge ends it, and how sure are we?**
 
-Built for NASA Space Apps 2026, challenge *Lunar Landing Site Navigator*, by team [TEAM NAME] (Surat, India).
+Built for NASA Space Apps 2026, challenge *Lunar Landing Site Navigator*, by team Purple Haze (Surat, India).
 
 - **Live dashboard:** https://lunar-navigator-omega.vercel.app
 - **Live engine API:** https://lunar-navigator-api.vercel.app (`/health`, `/horizon`, `/site`)
