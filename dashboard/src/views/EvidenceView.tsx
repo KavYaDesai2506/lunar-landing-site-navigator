@@ -413,6 +413,24 @@ export default function EvidenceView() {
         </section>
       ))}
 
+      {unc && (
+        <section className="card" aria-labelledby="unc-method-h">
+          <h2 id="unc-method-h">How the "how sure" bands are made</h2>
+          <p className="card-lede">
+            Each site's "± " band and the "happens in N% of terrains" notes come from recomputing its events on {unc.n_clones} alternative terrains. The exact recipe, as the engine records it:
+          </p>
+          <p>
+            <b>Method.</b> {unc.method}
+          </p>
+          <p>
+            <b>Scope.</b> {unc.scope_note}
+          </p>
+          <p className="note">
+            The "±" figure is the P10 to P90 spread of the event time across the clones in which the event happens; present_frac is the share of clones in which it happens at all. Sites with bands: {uncSites.join(", ") || "Shackleton rim"}.
+          </p>
+        </section>
+      )}
+
       <section className="card" aria-labelledby="lim-h">
         <h2 id="lim-h">What this tool does not know</h2>
         <ul className="plain spaced">

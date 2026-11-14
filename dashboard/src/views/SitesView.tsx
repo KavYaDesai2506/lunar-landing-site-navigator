@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DEFAULT_API, apiHealth, getApiBase, loadFeatures, loadIndex, resetApiBase, setApiBase, useAsync } from "../lib/data";
 import { fmtLat, fmtLon, fmtPct, fmtSpan, normLon, roundCoord } from "../lib/format";
 import { setState, useAppState } from "../lib/state";
@@ -140,7 +140,7 @@ function PolarMap({ sites, features, picked, onPick }: { sites: SiteHeadline[]; 
             );
           })()}
       </svg>
-      <p className="note">Circles are IAU-named craters and mountains (outline only: this is a locator, not an image). Click the map to fill in the coordinates of any point; click a pin to open that site.</p>
+      <p className="note">Circles are named craters and mountains, in outline: a locator, not an image.</p>
     </div>
   );
 }
@@ -181,6 +181,31 @@ export default function SitesView() {
     }
   };
 
+  // quiet health check on arrival, without touching the saved address
+  useEffect(() => {
+    let live = true;
+    setHealth("checking");
+    apiHealth().then(
+      (h) => live && (setEngine(h.engine ?? ""), setHealth(h.ok ? "ok" : "down")),
+      () => live && setHealth("down"),
+    );
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  // the preset closest to the typed point: the fallback when the live engine is down
+  const preset = useMemo(() => {
+    const list = idx.data?.sites ?? [];
+    if (!valid || !list.length) return null;
+    const r = Math.PI / 180;
+    const d = (h: SiteHeadline) => {
+      const x = Math.sin(((h.lat - latN) * r) / 2) ** 2 + Math.cos(latN * r) * Math.cos(h.lat * r) * Math.sin(((h.lon - lonN) * r) / 2) ** 2;
+      return Math.asin(Math.min(1, Math.sqrt(x)));
+    };
+    return list.reduce((best, h) => (d(h) < d(best) ? h : best), list[0]);
+  }, [idx.data, valid, latN, lonN]);
+
   const rows = useMemo(() => {
     const list = [...(idx.data?.sites ?? [])];
     const [k, dir] = sort;
@@ -201,32 +226,28 @@ export default function SitesView() {
     <div className="stack">
       <div className="grid-2">
         <section className="card" aria-labelledby="map-h">
-          <h2 id="map-h">South pole</h2>
+          <h2 id="map-h">South pole: click a pin to open a site, anywhere else to pick your own point</h2>
           <PolarMap sites={idx.data?.sites ?? []} features={feats.data ?? []} picked={valid && latN < -60 ? [latN, normLon(lonN)] : null} onPick={(a, b) => (setLat(String(a)), setLon(String(b)))} />
         </section>
 
-        <section className="card" aria-labelledby="custom-h">
-          <h2 id="custom-h">Any coordinates, through the same engine</h2>
-          <p className="card-lede">
-            A custom point goes through the same engine as the curated sites: a 720-ray horizon from LOLA terrain, event times with the terrain that causes them, and 18.6-year statistics. It is computed on request, in about a second
-            once the region is cached. The result always states the terrain resolution it used: 20 m per pixel near the pole when NASA's terrain server answers, and a coarser 240 m per pixel copy bundled with the engine when it does not. In
-            that case the site page says so and the times are approximate.
-          </p>
+        <section className="card" aria-labelledby="custom-h" data-hl="custom">
+          <h2 id="custom-h">Analyse your own point</h2>
+          <p className="card-lede">Click the map or type a point. It runs through the same engine as the preset sites and usually takes a few seconds.</p>
           <form
             className="form"
             onSubmit={(e) => {
               e.preventDefault();
               if (!valid) return;
               setApiBase(api === DEFAULT_API ? "" : api);
-              setState({ view: "site", site: "custom", lat: roundCoord(latN), lon: normLon(lonN), mast, t: s.t });
+              setState({ view: "site", site: "custom", lat: roundCoord(latN), lon: normLon(lonN), mast, t: s.t, tab: null });
             }}
           >
             <label>
-              <span className="ctl-label">Latitude (degrees, south negative)</span>
+              <span className="ctl-label">Latitude (south is negative)</span>
               <input className="input" inputMode="decimal" value={lat} onChange={(e) => setLat(e.target.value)} aria-invalid={!valid} />
             </label>
             <label>
-              <span className="ctl-label">Longitude (degrees east, 0 to 360)</span>
+              <span className="ctl-label">Longitude (east, 0 to 360)</span>
               <input className="input" inputMode="decimal" value={lon} onChange={(e) => setLon(e.target.value)} aria-invalid={!valid} />
             </label>
             <div>
@@ -242,53 +263,78 @@ export default function SitesView() {
               </div>
             </div>
             <button className="btn btn-primary" type="submit" disabled={!valid}>
-              Analyse this point
+              Analyse this point →
             </button>
           </form>
           {!valid && <p className="note alert">Latitude must be between −90 and 90, longitude between 0 and 360.</p>}
-          {valid && <p className="note">{fmtLat(roundCoord(latN))}, {fmtLon(normLon(lonN))}{outside ? ". Outside the south-polar DEM: the engine uses coarser terrain here and the first request can be slow. The north pole is not covered yet." : ""}</p>}
+          {valid && (
+            <p className="note">
+              {fmtLat(roundCoord(latN))}, {fmtLon(normLon(lonN))}
+              {outside ? ". Away from the south pole the engine uses coarser terrain and the first request can be slow. The north pole is not covered yet." : ""}
+            </p>
+          )}
 
-          <h3>Live engine</h3>
-          <p className="note">Custom coordinates need the engine API. Everything else on this site is precomputed and works without it.</p>
-          <div className="form form-row">
-            <label style={{ flex: 1 }}>
-              <span className="ctl-label">Engine address</span>
-              <input className="input" value={api} onChange={(e) => (setApi(e.target.value), setHealth("idle"))} spellCheck={false} />
-            </label>
-            <button className="btn" type="button" onClick={() => check()}>
-              Check connection
-            </button>
-          </div>
-          <p className="note" role="status">
-            {health === "checking" && "Checking… (if the hosted engine was idle it takes about 15 seconds to start)"}
-            {health === "ok" && <span className="tag tag-match">✓ connected{engine ? ` · engine ${engine}` : ""}</span>}
-            {health === "down" && (
+          <p className="engine-line" role="status">
+            {health === "idle" || health === "checking" ? (
               <>
-                <span className="tag tag-fail">✕ not reachable</span>{" "}
-                {customApi ? "Nothing answered at this address." : "The hosted engine did not answer. It may be starting up: try again in a few seconds."}
+                <span className="tag tag-info">… live engine waking up</span> It sleeps when idle and takes about 15 seconds to start.
+              </>
+            ) : health === "ok" ? (
+              <>
+                <span className="tag tag-match">✓ live engine ready</span>
+              </>
+            ) : (
+              <>
+                <span className="tag tag-fail">live engine not answering</span> {customApi ? "Nothing answered at the address set under Advanced." : "It may still be starting."} The preset sites never need it.
               </>
             )}
           </p>
-          {customApi && (
-            <p>
-              <button className="btn" type="button" onClick={() => check(DEFAULT_API)}>
-                Reset to hosted engine
+          {health === "down" && (
+            <div className="row-controls">
+              <button className="btn btn-primary" type="button" onClick={() => check()}>
+                Check again
               </button>
+              <button className="btn" type="button" onClick={() => setState({ view: "site", site: preset?.id ?? "shackleton_rim_s", lat: null, lon: null, mast: "2", tab: null })}>
+                Try a preset{preset ? `: ${preset.name}` : ""}
+              </button>
+            </div>
+          )}
+
+          <details className="explain">
+            <summary>What terrain does a custom point use?</summary>
+            <p>
+              20 m per pixel near the pole when NASA's terrain server answers, and a coarser 240 m copy bundled with the engine when it does not. The result always says which one it used; on the coarser one, times are approximate.
             </p>
-          )}
-          {(health === "down" || customApi) && (
-            <details className="explain">
-              <summary>Running the engine locally?</summary>
-              <p>Start it from the engine folder, enter http://127.0.0.1:8765 above, then check the connection:</p>
-              <pre className="code">.venv/Scripts/python -m uvicorn lunarnav.api:app --app-dir src --port 8765</pre>
-            </details>
-          )}
+          </details>
+          <details className="explain" open={customApi || undefined}>
+            <summary>Advanced: engine address</summary>
+            <p className="note">Only needed if you run the engine yourself. Everything else on this site is precomputed.</p>
+            <div className="form form-row">
+              <label style={{ flex: 1 }}>
+                <span className="ctl-label">Engine address</span>
+                <input className="input" value={api} onChange={(e) => (setApi(e.target.value), setHealth("idle"))} spellCheck={false} />
+              </label>
+              <button className="btn" type="button" onClick={() => check()}>
+                Check connection
+              </button>
+            </div>
+            {health === "ok" && engine && <p className="note">Connected · engine {engine}</p>}
+            {customApi && (
+              <p>
+                <button className="btn" type="button" onClick={() => check(DEFAULT_API)}>
+                  Reset to the hosted engine
+                </button>
+              </p>
+            )}
+            <p className="note">To run it locally, start it from the engine folder, enter http://127.0.0.1:8765 above, then check the connection:</p>
+            <pre className="code">.venv/Scripts/python -m uvicorn lunarnav.api:app --app-dir src --port 8765</pre>
+          </details>
         </section>
       </div>
 
       <section className="card" aria-labelledby="cat-h">
-        <h2 id="cat-h">Catalogue: {rows.length} curated sites</h2>
-        <p className="card-lede">Long-term values at a 2 m mast over 18.6 years. Click a column to sort, a name to open the site.</p>
+        <h2 id="cat-h">{rows.length} preset sites</h2>
+        <p className="card-lede">Click a name to open the site, a column to sort. Long-term values for a 2 m mast.</p>
         <div className="table-scroll">
           <table className="data">
             <thead>
@@ -327,14 +373,14 @@ export default function SitesView() {
                     {h.far_side && <span className="chip chip-alert">far side</span>}
                     {h.earth_blocked_by_terrain && <span className="chip chip-alert">Earth hidden by terrain</span>}
                     {h.has_mission && <span className="chip chip-quiet">mission replay</span>}
-                    {h.has_uncertainty && <span className="chip chip-quiet">P10–P90</span>}
+                    {h.has_uncertainty && <span className="chip chip-quiet" title="Event times checked on NASA's 100 alternative terrains">± error bands</span>}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="note">Not yet in the catalogue: the nine Artemis III candidate regions (centre coordinates still being verified) and north-polar sites. Any south-polar point can be analysed with the form above.</p>
+        <p className="note">Not here yet: three of the nine Artemis III candidate regions, and north-polar sites. Any south-polar point can be analysed with the form above.</p>
       </section>
     </div>
   );

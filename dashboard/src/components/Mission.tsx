@@ -214,23 +214,25 @@ function SunsetSlice({ site }: { site: Site }) {
   );
 }
 
-export function MissionCard({ site, heading = "h2" }: { site: Site; heading?: "h2" | "h3" }) {
+export function MissionCard({ site, heading = "h2" }: { site: Site; heading?: "h2" | "h3" | "none" }) {
   const r = site.mission_replay;
   if (!r) return null;
   const v = verdict(r);
   const sunset = r.first_terrain_sunset_after_landing;
   const gap = openGap(r);
   const player = hasReplayTrack(site);
-  const Hd = heading;
+  const Hd = heading === "none" ? "h3" : heading;
   return (
-    <section className="card mission" aria-label={`Mission replay: ${site.name}`}>
-      <div className="card-head">
-        <Hd>
-          {heading === "h2" ? "Mission replay: predicted light vs what happened" : site.name}
-          {site.country && heading !== "h2" ? <span className="muted"> · {site.country}</span> : null}
-        </Hd>
-        <span className={`tag tag-${v.tone}`}>{v.tone === "match" ? "✓ " : v.tone === "honest" ? "◆ " : "○ "}{v.tag}</span>
-      </div>
+    <section className={heading === "none" ? "mission" : "card mission"} aria-label={`Mission replay: ${site.name}`}>
+      {heading !== "none" && (
+        <div className="card-head">
+          <Hd>
+            {heading === "h2" ? "Mission replay: predicted light vs what happened" : site.name}
+            {site.country && heading !== "h2" ? <span className="muted"> · {site.country}</span> : null}
+          </Hd>
+          <span className={`tag tag-${v.tone}`}>{v.tone === "match" ? "✓ " : v.tone === "honest" ? "◆ " : "○ "}{v.tag}</span>
+        </div>
+      )}
       <p className="card-lede">{v.text}</p>
       {gap && (
         <p className="gap-line">

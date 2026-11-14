@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { MissionCard, gapText, openGap, verdict } from "../components/Mission";
 import { loadIndex, loadSite, useAsync } from "../lib/data";
 import { fmtDateTime, fmtSpan, parseUtc } from "../lib/format";
-import { setState } from "../lib/state";
+import { setState, useAppState } from "../lib/state";
 import type { Site } from "../lib/types";
 
 const ORDER = ["chandrayaan3", "blue_ghost1", "im2", "im1", "slim"];
 
 export default function MissionsView() {
+  const s = useAppState();
   const idx = useAsync(loadIndex, "index");
   const [sites, setSites] = useState<Site[] | null>(null);
   const [error, setError] = useState(false);
@@ -39,8 +40,7 @@ export default function MissionsView() {
       <section className="card" aria-labelledby="ms-h">
         <h1 id="ms-h">Did the light end the mission?</h1>
         <p className="card-lede">
-          The same engine, run backwards in time on five real landings. For each one it predicts when the terrain took the Sun away and names the terrain that did it, then compares that with the published record. Press play on any mission below to watch the Sun reach the horizon. Two rows are deliberate
-          honesty checks: missions that ended for reasons light cannot explain.
+          {sites.length} real landings, replayed by the same engine. For each: when did the terrain take the Sun, which terrain did it, and does that match the record? Click a mission to watch it happen.
         </p>
         <div className="table-scroll">
           <table className="data">
@@ -70,7 +70,7 @@ export default function MissionsView() {
                 return (
                   <tr key={site.id}>
                     <th scope="row">
-                      <button className="linkish" onClick={() => setState({ view: "site", site: site.id, t: null })}>
+                      <button className="linkish" onClick={() => setState({ open: site.id, hl: `mission-${site.id}` })} title="Open the replay below">
                         {site.name}
                       </button>
                       {site.country && <span className="hint">{site.country}</span>}
@@ -96,13 +96,50 @@ export default function MissionsView() {
             </tbody>
           </table>
         </div>
-        <p className="note">
-          Times are UTC. "Flat-horizon tool" is the same sunset against a flat 0° horizon, which is what a tool without terrain assumes: later where ridges stand in the way, earlier on a summit such as IM-2's. "Reported end" comes from the cited public sources and some are known only to the day. The model knows terrain and geometry; it does not know lander tilt, thermal limits or battery state.
-        </p>
+        <details className="explain">
+          <summary>How to read this table</summary>
+          <p>
+            Times are UTC. "Flat-horizon tool" is the same sunset against a flat 0° horizon, which is what a tool without terrain assumes: later where ridges stand in the way, earlier on a summit such as IM-2's. "Reported end" comes from
+            the cited public sources and some are known only to the day.
+          </p>
+          <p>Two rows are deliberate honesty checks: missions that ended for reasons light cannot explain. The model knows terrain and geometry; it does not know lander tilt, thermal limits or battery state.</p>
+        </details>
       </section>
-      {sites.map((site) => (
-        <MissionCard key={site.id} site={site} heading="h3" />
-      ))}
+      <div className="acc">
+        {sites.map((site) => {
+          const v = verdict(site.mission_replay!);
+          const open = s.open === site.id;
+          return (
+            <section key={site.id} className={`acc-item${open ? " open" : ""}`} data-hl={`mission-${site.id}`}>
+              <h2 className="acc-h">
+                <button className="acc-btn" aria-expanded={open} aria-controls={`acc-${site.id}`} onClick={() => setState({ open: open ? null : site.id })}>
+                  <span className="acc-caret" aria-hidden>
+                    {open ? "▾" : "▸"}
+                  </span>
+                  <span className="acc-name">
+                    {site.name}
+                    {site.country ? <span className="muted"> · {site.country}</span> : null}
+                  </span>
+                  <span className={`tag tag-${v.tone}`}>
+                    {v.tone === "match" ? "✓ " : v.tone === "honest" ? "◆ " : "○ "}
+                    {v.tag}
+                  </span>
+                </button>
+              </h2>
+              {open && (
+                <div className="acc-body" id={`acc-${site.id}`}>
+                  <MissionCard site={site} heading="none" />
+                  <p>
+                    <button className="btn" onClick={() => setState({ view: "site", site: site.id, lat: null, lon: null, t: null, tab: "mission" })}>
+                      Open this site in Explore →
+                    </button>
+                  </p>
+                </div>
+              )}
+            </section>
+          );
+        })}
+      </div>
     </div>
   );
 }
