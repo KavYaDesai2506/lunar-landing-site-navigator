@@ -4,6 +4,7 @@
 
 Built for NASA Space Apps 2026, challenge *Lunar Landing Site Navigator*, by team Purple Haze (Surat, India).
 
+- **Demo video (30 s):** https://youtu.be/RbIx5fHE18Y
 - **Live dashboard:** https://lunar-navigator-omega.vercel.app
 - **Live engine API:** https://lunar-navigator-api.vercel.app (`/health`, `/horizon`, `/site`)
 - **Try first:** [Connecting Ridge C2, 14 Nov 2026](https://lunar-navigator-omega.vercel.app/#/site?site=connecting_ridge_c2&t=2026-11-14T07:30Z). The ridge near Henson crater hides the Sun at 08:26 UTC; press Play to watch it go.
@@ -76,7 +77,7 @@ We used Anthropic's Claude a lot, and we want judges to see exactly where.
 | Docs (this README, `docs/`) | **Drafted with Claude** | Edited and checked against the test outputs |
 | Research | Claude helped survey existing lunar illumination tools, published methods and mission records | Picked the challenge and the approach, and decided which claims to make |
 | Data and numbers | **No SI-generated data.** Every number comes from the engine running on NASA LOLA terrain and NAIF SPICE geometry, checked against JPL Horizons, Gläser et al., NASA PGDA maps and mission reports | Kept failed or ambiguous cases visible (IM-1, IM-2, the C2 long-term statistics) instead of loosening thresholds |
-| Images, video, audio | **No SI-generated images, video or audio.** The pole relief map is computed from NASA LOLA elevation data by `scripts/make_pole_hillshade.py` | Demo video recorded and narrated by the team |
+| Images, video, audio | **No SI-generated images, video or audio.** The pole relief map is computed from NASA LOLA elevation data by `scripts/make_pole_hillshade.py` | Demo video narrated by the team in our own voices, and the final edit is ours. Claude wrote the scripts that screen-recorded the live dashboard and cut the shots, helped draft the captions, and cleaned up the voice audio (trimming pauses, speed, loudness) |
 
 No NASA logos, flags or mission insignia are used or generated anywhere in the project.
 
