@@ -166,7 +166,7 @@ docs/             DATA_CONTRACT.md (engine → dashboard schema), DEPLOY_API.md
 
 ## Use of Super Intelligence (SI) tools
 
-We used Anthropic's Claude (Claude Code) to help write the code, the docs and the demo-video editing scripts. We chose the method and the validation tests ourselves. Every number comes from the engine running on NASA data, not from the AI.
+We used Anthropic's Claude (Claude Code) to help write the code. We chose the method and the validation tests ourselves. Every number comes from the engine running on NASA data, not from the AI.
 
 No NASA logos, flags or mission insignia are used or generated anywhere in the project.
 
